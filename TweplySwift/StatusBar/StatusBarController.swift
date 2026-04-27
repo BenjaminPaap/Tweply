@@ -15,6 +15,14 @@ final class StatusBarController {
             button.toolTip = "Tweply"
         }
         rebuildMenu()
+
+        NotificationCenter.default.addObserver(
+            forName: .templatesDidChange,
+            object:  nil,
+            queue:   .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.rebuildMenu() }
+        }
     }
 
     func rebuildMenu() {

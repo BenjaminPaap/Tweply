@@ -2,6 +2,10 @@ import Foundation
 import AppKit
 import UniformTypeIdentifiers
 
+extension Notification.Name {
+    static let templatesDidChange = Notification.Name("tweply.templatesDidChange")
+}
+
 final class DataStore: @unchecked Sendable {
     static let shared = DataStore()
     private init() {}
@@ -33,6 +37,7 @@ final class DataStore: @unchecked Sendable {
         encoder.outputFormatting = .prettyPrinted
         guard let data = try? encoder.encode(templates) else { return }
         try? data.write(to: templatesURL)
+        NotificationCenter.default.post(name: .templatesDidChange, object: nil)
     }
 
     // MARK: - Settings

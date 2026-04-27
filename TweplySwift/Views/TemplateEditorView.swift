@@ -6,12 +6,12 @@ struct TemplateEditorView: View {
     let onCancel: () -> Void
 
     @State private var segments: [Segment] = []
-    @State private var showRaw = false
-    @State private var rawText = ""
+    @State private var showRaw        = false
+    @State private var rawText        = ""
     @State private var showIconPicker = false
 
     init(template: Template, onSave: @escaping (Template) -> Void, onCancel: @escaping () -> Void) {
-        _draft    = State(initialValue: template)
+        _draft        = State(initialValue: template)
         self.onSave   = onSave
         self.onCancel = onCancel
     }
@@ -30,7 +30,12 @@ struct TemplateEditorView: View {
             Divider()
             toolbarRow
         }
-        .frame(width: 600, height: 560)
+        // Resizable — no fixed height
+        .frame(minWidth: 520, idealWidth: 620, maxWidth: .infinity,
+               minHeight: 480, idealHeight: 580, maxHeight: .infinity)
+        .sheet(isPresented: $showIconPicker) {
+            IconPickerView(selectedIcon: $draft.icon)
+        }
         .onAppear {
             segments = TemplateParser.parse(draft.template)
             rawText  = draft.template
@@ -56,16 +61,13 @@ struct TemplateEditorView: View {
             Text("Icon:")
                 .frame(width: 50, alignment: .trailing)
 
-            Button {
-                showIconPicker.toggle()
-            } label: {
+            Button { showIconPicker = true } label: {
                 Group {
                     if let icon = draft.icon, !icon.isEmpty {
-                        Image(systemName: icon)
-                            .font(.system(size: 16))
+                        Image(systemName: icon).font(.system(size: 15))
                     } else {
                         Image(systemName: "square.dashed")
-                            .font(.system(size: 16))
+                            .font(.system(size: 15))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -73,18 +75,11 @@ struct TemplateEditorView: View {
                 .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
             }
             .buttonStyle(.plain)
-            .popover(isPresented: $showIconPicker, arrowEdge: .bottom) {
-                IconPickerView(selectedIcon: $draft.icon)
-            }
 
             if let icon = draft.icon, !icon.isEmpty {
-                Text(icon)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(icon).font(.caption).foregroundStyle(.secondary)
                 Button("Remove") { draft.icon = nil }
-                    .buttonStyle(.plain)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                    .buttonStyle(.plain).font(.caption).foregroundStyle(.red)
             }
 
             Spacer()
@@ -101,39 +96,42 @@ struct TemplateEditorView: View {
             TextEditor(text: $rawText)
                 .font(.system(.body, design: .monospaced))
                 .padding(8)
-                .frame(height: 110)
+                .frame(minHeight: 100, maxHeight: .infinity)
                 .onChange(of: rawText) { _, v in
                     segments       = TemplateParser.parse(v)
                     draft.template = v
                 }
         } else {
-            ScrollView {
+            Group {
                 if segments.isEmpty {
                     Text("Add chips from the palette below")
                         .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    VStack(spacing: 4) {
+                    List {
                         ForEach(Array(segments.enumerated()), id: \.element.id) { idx, _ in
                             ChipRowView(
-                                segment:    $segments[idx],
-                                onDelete:   { removeChip(at: idx) },
-                                onMoveUp:   idx > 0 ? { swapChip(idx, idx - 1) } : nil,
-                                onMoveDown: idx < segments.count - 1 ? { swapChip(idx, idx + 1) } : nil
+                                segment:  $segments[idx],
+                                onDelete: { removeChip(at: idx) }
                             )
+                            .listRowInsets(EdgeInsets(top: 2, leading: 6, bottom: 2, trailing: 6))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                        }
+                        .onMove { from, to in
+                            segments.move(fromOffsets: from, toOffset: to)
+                            syncFromSegments()
                         }
                     }
-                    .padding(8)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .frame(height: 110)
+            .frame(minHeight: 100, maxHeight: .infinity)
         }
     }
 
     private func removeChip(at idx: Int) { segments.remove(at: idx); syncFromSegments() }
-    private func swapChip(_ a: Int, _ b: Int) { segments.swapAt(a, b); syncFromSegments() }
-    private func appendChip(_ seg: Segment) { segments.append(seg); syncFromSegments() }
 
     private func syncFromSegments() {
         let str        = TemplateParser.stringify(segments)
@@ -158,11 +156,9 @@ struct TemplateEditorView: View {
     private func paletteRow(for cat: SegmentCategory) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text("\(cat.rawValue):")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondary)
                 .frame(width: 70, alignment: .trailing)
                 .padding(.top, 3)
-
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
                     if cat == .text {
@@ -178,6 +174,8 @@ struct TemplateEditorView: View {
             }
         }
     }
+
+    private func appendChip(_ seg: Segment) { segments.append(seg); syncFromSegments() }
 
     private func defaultSegment(for type: SegmentType) -> Segment {
         switch type {
@@ -199,15 +197,13 @@ struct TemplateEditorView: View {
 
     private var previewRow: some View {
         HStack {
-            Text("Preview:")
-                .font(.caption).foregroundStyle(.secondary)
+            Text("Preview:").font(.caption).foregroundStyle(.secondary)
             Text((try? TemplateResolver.resolveAll(segments)) ?? draft.template)
                 .font(.system(.body, design: .monospaced))
                 .lineLimit(1).truncationMode(.tail)
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12).padding(.vertical, 8)
     }
 
     // MARK: - Toolbar
@@ -242,9 +238,7 @@ private struct DateFormatOption {
 
 struct ChipRowView: View {
     @Binding var segment: Segment
-    let onDelete:   () -> Void
-    let onMoveUp:   (() -> Void)?
-    let onMoveDown: (() -> Void)?
+    let onDelete: () -> Void
 
     @State private var showCustomFormat = false
 
@@ -275,28 +269,12 @@ struct ChipRowView: View {
                 DateFormatOption(label: "European",   format: "DD.MM.YYYY HH:mm"),
                 DateFormatOption(label: "US",         format: "MM/DD/YYYY HH:mm"),
             ]
-        default:
-            return []
+        default: return []
         }
     }
 
     var body: some View {
         HStack(spacing: 6) {
-            // Reorder
-            VStack(spacing: 0) {
-                Button { onMoveUp?() } label: {
-                    Image(systemName: "chevron.up").font(.system(size: 9))
-                }
-                .disabled(onMoveUp == nil).buttonStyle(.plain)
-                .foregroundStyle(onMoveUp != nil ? .secondary : .quaternary)
-
-                Button { onMoveDown?() } label: {
-                    Image(systemName: "chevron.down").font(.system(size: 9))
-                }
-                .disabled(onMoveDown == nil).buttonStyle(.plain)
-                .foregroundStyle(onMoveDown != nil ? .secondary : .quaternary)
-            }
-
             // Type badge
             Text(segment.type.rawValue)
                 .font(.system(size: 11, weight: .medium))
@@ -346,7 +324,7 @@ struct ChipRowView: View {
             }
             .buttonStyle(.plain).foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 8).padding(.vertical, 4)
+        .padding(.horizontal, 8).padding(.vertical, 5)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
     }
 
@@ -388,94 +366,5 @@ struct ChipRowView: View {
             .textFieldStyle(.roundedBorder).font(.caption)
             .frame(maxWidth: 130)
         }
-    }
-}
-
-// MARK: - IconPickerView
-
-struct IconPickerView: View {
-    @Binding var selectedIcon: String?
-    @State private var customSymbol = ""
-    @Environment(\.dismiss) private var dismiss
-
-    private let columns = Array(repeating: GridItem(.fixed(36)), count: 8)
-
-    private let groups: [(String, [String])] = [
-        ("Files & Docs",   ["doc", "doc.text", "doc.fill", "folder", "folder.fill", "paperclip", "link", "tray.fill"]),
-        ("Time",           ["calendar", "clock", "clock.fill", "timer", "alarm", "stopwatch", "hourglass"]),
-        ("Communication",  ["envelope", "envelope.fill", "message", "message.fill", "phone", "phone.fill", "bubble.left", "at"]),
-        ("Actions",        ["star", "star.fill", "heart", "heart.fill", "flag", "flag.fill", "bell", "bell.fill"]),
-        ("Objects",        ["tag", "tag.fill", "gear", "bolt", "bolt.fill", "wrench", "paintbrush", "scissors"]),
-        ("People",         ["person", "person.fill", "person.2", "person.2.fill", "person.circle", "person.circle.fill"]),
-        ("Symbols",        ["checkmark.circle", "checkmark.circle.fill", "xmark.circle", "exclamationmark.circle",
-                            "plus.circle", "minus.circle", "info.circle", "questionmark.circle"]),
-        ("Arrows",         ["arrow.right", "arrow.left", "arrow.up", "arrow.down",
-                            "arrow.uturn.right", "arrowshape.right.fill", "return", "escape"]),
-    ]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Choose Icon")
-                .font(.headline)
-                .padding()
-
-            Divider()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    ForEach(groups, id: \.0) { groupName, icons in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(groupName)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal)
-                            LazyVGrid(columns: columns, spacing: 4) {
-                                ForEach(icons, id: \.self) { icon in
-                                    Button {
-                                        selectedIcon = icon
-                                        dismiss()
-                                    } label: {
-                                        Image(systemName: icon)
-                                            .font(.system(size: 15))
-                                            .frame(width: 32, height: 32)
-                                            .background(
-                                                selectedIcon == icon
-                                                    ? Color.accentColor.opacity(0.2)
-                                                    : Color.clear,
-                                                in: RoundedRectangle(cornerRadius: 6)
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .help(icon)
-                                }
-                            }
-                            .padding(.horizontal, 8)
-                        }
-                    }
-                }
-                .padding(.vertical, 12)
-            }
-            .frame(height: 320)
-
-            Divider()
-
-            HStack(spacing: 8) {
-                Text("Custom:")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                TextField("e.g. star.circle.fill", text: $customSymbol)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.caption)
-                Button("Use") {
-                    guard !customSymbol.isEmpty else { return }
-                    selectedIcon = customSymbol
-                    dismiss()
-                }
-                .disabled(customSymbol.isEmpty)
-            }
-            .padding(12)
-        }
-        .frame(width: 320)
-        .onAppear { customSymbol = selectedIcon ?? "" }
     }
 }
