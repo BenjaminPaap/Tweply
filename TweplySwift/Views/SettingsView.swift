@@ -49,12 +49,21 @@ struct SettingsView: View {
                 }
             }
             Button("Export") { DataStore.shared.exportTemplates(templates) }
-            Button {
-                editingTemplate = Template()
+
+            Menu {
+                Button("Add Template") {
+                    editingTemplate = Template()
+                }
+                Divider()
+                Button("Add Separator") {
+                    templates.append(.separator())
+                    DataStore.shared.saveTemplates(templates)
+                }
             } label: {
                 Label("Add", systemImage: "plus")
             }
-            .buttonStyle(.borderedProminent)
+            .menuStyle(.borderedButton)
+            .fixedSize()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -65,15 +74,23 @@ struct SettingsView: View {
     private var templateList: some View {
         List {
             ForEach(templates) { tmpl in
-                TemplateRowView(
-                    template: tmpl,
-                    onEdit: { editingTemplate = tmpl },
-                    onDelete: {
+                if tmpl.isSeparator {
+                    SeparatorRowView(onDelete: {
                         templates.removeAll { $0.id == tmpl.id }
                         DataStore.shared.saveTemplates(templates)
-                    }
-                )
-                .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                    })
+                    .listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
+                } else {
+                    TemplateRowView(
+                        template: tmpl,
+                        onEdit:   { editingTemplate = tmpl },
+                        onDelete: {
+                            templates.removeAll { $0.id == tmpl.id }
+                            DataStore.shared.saveTemplates(templates)
+                        }
+                    )
+                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                }
             }
             .onMove { from, to in
                 templates.move(fromOffsets: from, toOffset: to)
@@ -90,22 +107,45 @@ struct SettingsView: View {
             Toggle("Launch at login", isOn: $settings.openAtLogin)
                 .onChange(of: settings.openAtLogin) { _, enabled in
                     DataStore.shared.saveSettings(settings)
-                    applyLoginItem(enabled: enabled)
+                    if #available(macOS 13, *) {
+                        if enabled { try? SMAppService.mainApp.register() }
+                        else       { try? SMAppService.mainApp.unregister() }
+                    }
                 }
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
+}
 
-    private func applyLoginItem(enabled: Bool) {
-        if #available(macOS 13, *) {
-            if enabled {
-                try? SMAppService.mainApp.register()
-            } else {
-                try? SMAppService.mainApp.unregister()
-            }
+// MARK: - SeparatorRowView
+
+struct SeparatorRowView: View {
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "line.3.horizontal")
+                .foregroundStyle(.tertiary)
+                .font(.caption)
+
+            Rectangle()
+                .fill(Color(nsColor: .separatorColor))
+                .frame(height: 1)
+
+            Text("Separator")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
+            Spacer()
+
+            Button("Delete", action: onDelete)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .foregroundStyle(.red)
         }
+        .padding(.vertical, 4)
     }
 }
 
@@ -122,8 +162,17 @@ struct TemplateRowView: View {
                 .foregroundStyle(.tertiary)
                 .font(.caption)
 
+            // Icon
+            if let icon = template.icon, !icon.isEmpty {
+                Image(systemName: icon)
+                    .frame(width: 16)
+                    .foregroundStyle(.secondary)
+            } else {
+                Color.clear.frame(width: 16)
+            }
+
             Text(template.name)
-                .frame(width: 130, alignment: .leading)
+                .frame(width: 120, alignment: .leading)
                 .lineLimit(1)
 
             ScrollView(.horizontal, showsIndicators: false) {

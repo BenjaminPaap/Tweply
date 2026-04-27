@@ -5,6 +5,7 @@ import SwiftUI
 final class StatusBarController {
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
+    private var settingsWindowDelegate: WindowCloseDelegate?
     private var activeCoordinator: ChoicePickerCoordinator?
 
     func setup() {
@@ -21,13 +22,26 @@ final class StatusBarController {
         let templates = DataStore.shared.loadTemplates()
 
         for template in templates {
+            if template.isSeparator {
+                menu.addItem(.separator())
+                continue
+            }
+
             let item = NSMenuItem(
-                title:          template.name,
-                action:         #selector(activateItem(_:)),
-                keyEquivalent:  ""
+                title:         template.name,
+                action:        #selector(activateItem(_:)),
+                keyEquivalent: ""
             )
-            item.target             = self
-            item.representedObject  = template
+            item.target            = self
+            item.representedObject = template
+
+            if let iconName = template.icon,
+               !iconName.isEmpty,
+               let img = NSImage(systemSymbolName: iconName, accessibilityDescription: nil) {
+                let cfg = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+                item.image = img.withSymbolConfiguration(cfg)
+            }
+
             menu.addItem(item)
         }
 
@@ -93,18 +107,20 @@ final class StatusBarController {
             return
         }
 
-        let view = SettingsView()
-        let hc   = NSHostingController(rootView: view)
-        let win  = NSWindow(contentViewController: hc)
+        let hc  = NSHostingController(rootView: SettingsView())
+        let win = NSWindow(contentViewController: hc)
         win.title      = "Tweply"
         win.styleMask  = [.titled, .closable, .resizable, .miniaturizable]
         win.setContentSize(NSSize(width: 640, height: 520))
         win.center()
         win.isReleasedWhenClosed = false
-        win.delegate = WindowCloseDelegate { [weak self] in
+        let closeDelegate = WindowCloseDelegate { [weak self] in
             self?.settingsWindow = nil
+            self?.settingsWindowDelegate = nil
             self?.rebuildMenu()
         }
+        settingsWindowDelegate = closeDelegate
+        win.delegate = closeDelegate
 
         settingsWindow = win
         win.makeKeyAndOrderFront(nil)
@@ -118,7 +134,7 @@ final class StatusBarController {
             let coordinator = ChoicePickerCoordinator(continuation: continuation)
             self.activeCoordinator = coordinator
 
-            let view = ChoicePickerView(descriptors: descriptors) { [weak coordinator] values in
+            let view  = ChoicePickerView(descriptors: descriptors) { [weak coordinator] values in
                 coordinator?.complete(values)
             }
             let hc    = NSHostingController(rootView: view)
@@ -140,14 +156,14 @@ final class StatusBarController {
     // MARK: - Icon
 
     private func makeStatusIcon() -> NSImage {
-        let size   = NSSize(width: 18, height: 18)
-        let image  = NSImage(size: size, flipped: false) { rect in
+        let size  = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
             let attrs: [NSAttributedString.Key: Any] = [
                 .font:            NSFont.systemFont(ofSize: 15, weight: .semibold),
                 .foregroundColor: NSColor.labelColor,
             ]
-            let str  = NSAttributedString(string: "T", attributes: attrs)
-            let sz   = str.size()
+            let str = NSAttributedString(string: "T", attributes: attrs)
+            let sz  = str.size()
             str.draw(at: NSPoint(x: (rect.width - sz.width) / 2,
                                  y: (rect.height - sz.height) / 2))
             return true
@@ -175,9 +191,7 @@ final class ChoicePickerCoordinator: NSObject, NSWindowDelegate, @unchecked Send
         continuation.resume(returning: values)
     }
 
-    func windowWillClose(_ notification: Notification) {
-        complete(nil)
-    }
+    func windowWillClose(_ notification: Notification) { complete(nil) }
 }
 
 // MARK: - WindowCloseDelegate

@@ -106,11 +106,39 @@ struct Template: Codable, Identifiable, Equatable {
     var id: String
     var name: String
     var template: String
+    var icon: String?
+    var isSeparator: Bool
 
-    init(id: String = UUID().uuidString, name: String = "", template: String = "") {
+    init(
+        id: String = UUID().uuidString,
+        name: String = "",
+        template: String = "",
+        icon: String? = nil,
+        isSeparator: Bool = false
+    ) {
         self.id = id
         self.name = name
         self.template = template
+        self.icon = icon
+        self.isSeparator = isSeparator
+    }
+
+    static func separator() -> Template {
+        Template(id: UUID().uuidString, isSeparator: true)
+    }
+
+    // Backward-compatible decoding
+    enum CodingKeys: String, CodingKey {
+        case id, name, template, icon, isSeparator
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id          = try c.decode(String.self, forKey: .id)
+        name        = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        template    = try c.decodeIfPresent(String.self, forKey: .template) ?? ""
+        icon        = try c.decodeIfPresent(String.self, forKey: .icon)
+        isSeparator = try c.decodeIfPresent(Bool.self,   forKey: .isSeparator) ?? false
     }
 }
 
