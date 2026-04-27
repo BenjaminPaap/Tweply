@@ -1,0 +1,436 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D040000000000000000000AB /* TweplySwiftApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020000000000000000000AB /* TweplySwiftApp.swift */; };
+		D041000000000000000000AB /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = D023000000000000000000AB /* Template.swift */; };
+		D042000000000000000000AB /* TemplateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024000000000000000000AB /* TemplateParser.swift */; };
+		D043000000000000000000AB /* TemplateResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D025000000000000000000AB /* TemplateResolver.swift */; };
+		D044000000000000000000AB /* Transforms.swift in Sources */ = {isa = PBXBuildFile; fileRef = D026000000000000000000AB /* Transforms.swift */; };
+		D045000000000000000000AB /* PlaceholderRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D027000000000000000000AB /* PlaceholderRegistry.swift */; };
+		D046000000000000000000AB /* DatePlaceholders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D028000000000000000000AB /* DatePlaceholders.swift */; };
+		D047000000000000000000AB /* SystemPlaceholders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D029000000000000000000AB /* SystemPlaceholders.swift */; };
+		D048000000000000000000AB /* RandomPlaceholders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A000000000000000000AB /* RandomPlaceholders.swift */; };
+		D049000000000000000000AB /* CounterPlaceholders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02B000000000000000000AB /* CounterPlaceholders.swift */; };
+		D04A000000000000000000AB /* ClipboardPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02C000000000000000000AB /* ClipboardPlaceholder.swift */; };
+		D04B000000000000000000AB /* InteractivePlaceholders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02D000000000000000000AB /* InteractivePlaceholders.swift */; };
+		D04C000000000000000000AB /* DataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02E000000000000000000AB /* DataStore.swift */; };
+		D04D000000000000000000AB /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F000000000000000000AB /* StatusBarController.swift */; };
+		D04E000000000000000000AB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D030000000000000000000AB /* SettingsView.swift */; };
+		D04F000000000000000000AB /* TemplateEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D031000000000000000000AB /* TemplateEditorView.swift */; };
+		D050000000000000000000AB /* ChoicePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032000000000000000000AB /* ChoicePickerView.swift */; };
+		D051000000000000000000AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D022000000000000000000AB /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D003000000000000000000AB /* Tweply.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tweply.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D020000000000000000000AB /* TweplySwiftApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweplySwiftApp.swift; sourceTree = "<group>"; };
+		D021000000000000000000AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D022000000000000000000AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D023000000000000000000AB /* Template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Template.swift; sourceTree = "<group>"; };
+		D024000000000000000000AB /* TemplateParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateParser.swift; sourceTree = "<group>"; };
+		D025000000000000000000AB /* TemplateResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateResolver.swift; sourceTree = "<group>"; };
+		D026000000000000000000AB /* Transforms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transforms.swift; sourceTree = "<group>"; };
+		D027000000000000000000AB /* PlaceholderRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderRegistry.swift; sourceTree = "<group>"; };
+		D028000000000000000000AB /* DatePlaceholders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePlaceholders.swift; sourceTree = "<group>"; };
+		D029000000000000000000AB /* SystemPlaceholders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPlaceholders.swift; sourceTree = "<group>"; };
+		D02A000000000000000000AB /* RandomPlaceholders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomPlaceholders.swift; sourceTree = "<group>"; };
+		D02B000000000000000000AB /* CounterPlaceholders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterPlaceholders.swift; sourceTree = "<group>"; };
+		D02C000000000000000000AB /* ClipboardPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPlaceholder.swift; sourceTree = "<group>"; };
+		D02D000000000000000000AB /* InteractivePlaceholders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractivePlaceholders.swift; sourceTree = "<group>"; };
+		D02E000000000000000000AB /* DataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStore.swift; sourceTree = "<group>"; };
+		D02F000000000000000000AB /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
+		D030000000000000000000AB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D031000000000000000000AB /* TemplateEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditorView.swift; sourceTree = "<group>"; };
+		D032000000000000000000AB /* ChoicePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoicePickerView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D006000000000000000000AB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D007000000000000000000AB /* MainGroup */ = {
+			isa = PBXGroup;
+			children = (
+				D009000000000000000000AB /* TweplySwift */,
+				D008000000000000000000AB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D008000000000000000000AB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D003000000000000000000AB /* Tweply.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D009000000000000000000AB /* TweplySwift */ = {
+			isa = PBXGroup;
+			children = (
+				D020000000000000000000AB /* TweplySwiftApp.swift */,
+				D021000000000000000000AB /* Info.plist */,
+				D022000000000000000000AB /* Assets.xcassets */,
+				D00A000000000000000000AB /* Models */,
+				D00B000000000000000000AB /* Core */,
+				D00D000000000000000000AB /* Store */,
+				D00E000000000000000000AB /* StatusBar */,
+				D00F000000000000000000AB /* Views */,
+			);
+			path = TweplySwift;
+			sourceTree = "<group>";
+		};
+		D00A000000000000000000AB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				D023000000000000000000AB /* Template.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D00B000000000000000000AB /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				D024000000000000000000AB /* TemplateParser.swift */,
+				D025000000000000000000AB /* TemplateResolver.swift */,
+				D026000000000000000000AB /* Transforms.swift */,
+				D00C000000000000000000AB /* Placeholders */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		D00C000000000000000000AB /* Placeholders */ = {
+			isa = PBXGroup;
+			children = (
+				D027000000000000000000AB /* PlaceholderRegistry.swift */,
+				D028000000000000000000AB /* DatePlaceholders.swift */,
+				D029000000000000000000AB /* SystemPlaceholders.swift */,
+				D02A000000000000000000AB /* RandomPlaceholders.swift */,
+				D02B000000000000000000AB /* CounterPlaceholders.swift */,
+				D02C000000000000000000AB /* ClipboardPlaceholder.swift */,
+				D02D000000000000000000AB /* InteractivePlaceholders.swift */,
+			);
+			path = Placeholders;
+			sourceTree = "<group>";
+		};
+		D00D000000000000000000AB /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				D02E000000000000000000AB /* DataStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		D00E000000000000000000AB /* StatusBar */ = {
+			isa = PBXGroup;
+			children = (
+				D02F000000000000000000AB /* StatusBarController.swift */,
+			);
+			path = StatusBar;
+			sourceTree = "<group>";
+		};
+		D00F000000000000000000AB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D030000000000000000000AB /* SettingsView.swift */,
+				D031000000000000000000AB /* TemplateEditorView.swift */,
+				D032000000000000000000AB /* ChoicePickerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D002000000000000000000AB /* Tweply */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D011000000000000000000AB /* Build configuration list for PBXNativeTarget "Tweply" */;
+			buildPhases = (
+				D004000000000000000000AB /* Sources */,
+				D005000000000000000000AB /* Resources */,
+				D006000000000000000000AB /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tweply;
+			productName = Tweply;
+			productReference = D003000000000000000000AB /* Tweply.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D001000000000000000000AB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					D002000000000000000000AB = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = D010000000000000000000AB /* Build configuration list for PBXProject "TweplySwift" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D007000000000000000000AB;
+			productRefGroup = D008000000000000000000AB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D002000000000000000000AB /* Tweply */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D005000000000000000000AB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D051000000000000000000AB /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D004000000000000000000AB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D040000000000000000000AB /* TweplySwiftApp.swift in Sources */,
+				D041000000000000000000AB /* Template.swift in Sources */,
+				D042000000000000000000AB /* TemplateParser.swift in Sources */,
+				D043000000000000000000AB /* TemplateResolver.swift in Sources */,
+				D044000000000000000000AB /* Transforms.swift in Sources */,
+				D045000000000000000000AB /* PlaceholderRegistry.swift in Sources */,
+				D046000000000000000000AB /* DatePlaceholders.swift in Sources */,
+				D047000000000000000000AB /* SystemPlaceholders.swift in Sources */,
+				D048000000000000000000AB /* RandomPlaceholders.swift in Sources */,
+				D049000000000000000000AB /* CounterPlaceholders.swift in Sources */,
+				D04A000000000000000000AB /* ClipboardPlaceholder.swift in Sources */,
+				D04B000000000000000000AB /* InteractivePlaceholders.swift in Sources */,
+				D04C000000000000000000AB /* DataStore.swift in Sources */,
+				D04D000000000000000000AB /* StatusBarController.swift in Sources */,
+				D04E000000000000000000AB /* SettingsView.swift in Sources */,
+				D04F000000000000000000AB /* TemplateEditorView.swift in Sources */,
+				D050000000000000000000AB /* ChoicePickerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D012000000000000000000AB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D013000000000000000000AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		D014000000000000000000AB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TweplySwift/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tweply.app;
+				PRODUCT_NAME = Tweply;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D015000000000000000000AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TweplySwift/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tweply.app;
+				PRODUCT_NAME = Tweply;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D010000000000000000000AB /* Build configuration list for PBXProject "TweplySwift" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D012000000000000000000AB /* Debug */,
+				D013000000000000000000AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D011000000000000000000AB /* Build configuration list for PBXNativeTarget "Tweply" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D014000000000000000000AB /* Debug */,
+				D015000000000000000000AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = D001000000000000000000AB /* Project object */;
+}
