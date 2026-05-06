@@ -27,6 +27,11 @@ build:
     - ditto -c -k --sequesterRsrc --keepParent
         build/Build/Products/Release/Tweply.app
         dist/Tweply.zip
+    - |
+      curl --fail --silent \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file dist/Tweply.zip \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tweply/${CI_COMMIT_SHORT_SHA}/Tweply.zip"
   artifacts:
     paths:
       - dist/Tweply.zip
