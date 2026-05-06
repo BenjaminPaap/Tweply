@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tweply — Smart Templates &amp; Clipboard Manager</title>
     <meta name="description" content="Tweply is a macOS menu bar app for smart text templates and clipboard history.">
+    <link rel="icon" type="image/png" href="/tweply-icon.png">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -33,17 +34,10 @@
         .icon {
             width: 112px;
             height: 112px;
-            background: linear-gradient(145deg, #b56fff, #7b22d9);
             border-radius: 25px;
             margin: 0 auto 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 58px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -2px;
-            box-shadow: 0 8px 24px rgba(123, 34, 217, 0.35);
+            box-shadow: 0 8px 24px rgba(123, 34, 217, 0.25);
+            display: block;
         }
 
         h1 {
@@ -122,7 +116,7 @@
 </head>
 <body>
     <div class="card">
-        <div class="icon">T</div>
+        <img class="icon" src="/tweply-icon.png" alt="Tweply icon">
 
         <h1>Tweply</h1>
         <p class="subtitle">
