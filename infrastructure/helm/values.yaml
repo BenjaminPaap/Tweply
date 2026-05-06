@@ -1,5 +1,5 @@
 image:
-  repository: registry.gitlab.paap.one/tweply/app
+  repository: registry.gitlab.paap.one/benjamin/tweply
   tag: latest
   pullPolicy: IfNotPresent
 
