@@ -6,6 +6,9 @@ struct FieldDescriptor: Sendable {
     enum Kind: Sendable {
         case select(options: [String])
         case input(label: String)
+        case textArea(label: String)
+        case number(label: String, min: Double?, max: Double?)
+        case toggle(label: String, on: String, off: String)
     }
     let kind: Kind
 }

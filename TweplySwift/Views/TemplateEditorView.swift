@@ -9,6 +9,7 @@ struct TemplateEditorView: View {
     @State private var showRaw        = false
     @State private var rawText        = ""
     @State private var showIconPicker = false
+    @State private var paletteHeight: CGFloat = 150
 
     init(template: Template, onSave: @escaping (Template) -> Void, onCancel: @escaping () -> Void) {
         _draft        = State(initialValue: template)
@@ -22,8 +23,10 @@ struct TemplateEditorView: View {
             Divider()
             iconRow
             Divider()
-            chipArea
+            helpRow
             Divider()
+            chipArea
+            paletteResizeHandle
             paletteArea
             Divider()
             previewRow
@@ -39,6 +42,11 @@ struct TemplateEditorView: View {
         .onAppear {
             segments = TemplateParser.parse(draft.template)
             rawText  = draft.template
+            // SwiftUI sheets don't expose a resizable style mask by default;
+            // grab the key window (the sheet itself) and opt in.
+            DispatchQueue.main.async {
+                NSApplication.shared.keyWindow?.styleMask.insert(.resizable)
+            }
         }
     }
 
@@ -86,6 +94,24 @@ struct TemplateEditorView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+
+    // MARK: - Help
+
+    private var helpRow: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(.secondary)
+                .font(.caption)
+            Text("Build your template by adding chips from the palette. Drag chips to reorder them. Text chips hold literal content; coloured chips are dynamic placeholders resolved when copying.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(nsColor: .controlBackgroundColor))
     }
 
     // MARK: - Chip Area
@@ -139,6 +165,13 @@ struct TemplateEditorView: View {
         rawText        = str
     }
 
+    // MARK: - Palette resize handle
+
+    private var paletteResizeHandle: some View {
+        PaletteResizeHandle(height: $paletteHeight, minHeight: 80, maxHeight: 320)
+            .frame(height: 8)
+    }
+
     // MARK: - Palette
 
     private var paletteArea: some View {
@@ -150,7 +183,7 @@ struct TemplateEditorView: View {
             }
             .padding(10)
         }
-        .frame(height: 150)
+        .frame(height: paletteHeight)
     }
 
     private func paletteRow(for cat: SegmentCategory) -> some View {
@@ -179,26 +212,54 @@ struct TemplateEditorView: View {
 
     private func defaultSegment(for type: SegmentType) -> Segment {
         switch type {
+        // Date
         case .currentDate:     return Segment(type: .currentDate,     args: ["YYYY-MM-DD"])
         case .currentTime:     return Segment(type: .currentTime,     args: ["HH:mm:ss"])
         case .currentDateTime: return Segment(type: .currentDateTime, args: ["YYYY-MM-DDTHH:mm:ss"])
+        case .dateAdd:         return Segment(type: .dateAdd,         args: ["+1d"])
+        case .quarterStart:    return Segment(type: .quarterStart)
+        case .quarterEnd:      return Segment(type: .quarterEnd)
+        // Interactive
         case .choice:          return Segment(type: .choice,          args: ["option1", "option2"])
         case .input:           return Segment(type: .input,           args: ["Label"])
-        case .counter:         return Segment(type: .counter,         args: ["id"])
-        case .env:             return Segment(type: .env,             args: ["VAR_NAME"])
+        case .textArea:        return Segment(type: .textArea,        args: ["Text"])
+        case .number:          return Segment(type: .number,          args: ["Amount"])
+        case .toggle:          return Segment(type: .toggle,          args: ["Option", "Yes", "No"])
+        // Random
         case .nanoId:          return Segment(type: .nanoId,          args: ["10"])
         case .random:          return Segment(type: .random,          args: ["100"])
         case .randomHex:       return Segment(type: .randomHex,       args: ["8"])
+        case .lorem:           return Segment(type: .lorem,           args: ["5"])
+        case .sequence:        return Segment(type: .sequence,        args: ["a", "b", "c"])
+        // System
+        case .env:             return Segment(type: .env,             args: ["VAR_NAME"])
+        case .counter:         return Segment(type: .counter,         args: ["id"])
+        case .clipLine:        return Segment(type: .clipLine,        args: ["1"])
         default:               return Segment(type: type)
         }
     }
 
     // MARK: - Preview
 
+    private var previewText: String {
+        var userValues: [String] = []
+        for seg in segments where PlaceholderRegistry.shared.isInteractive(seg.type) {
+            switch seg.type {
+            case .choice:   userValues.append(seg.args.first ?? "")
+            case .input:    userValues.append(seg.args.first ?? "Value")
+            case .textArea: userValues.append(seg.args.first ?? "…")
+            case .number:   userValues.append(seg.args.count > 1 ? seg.args[1] : "0")
+            case .toggle:   userValues.append(seg.args.count > 2 ? seg.args[2] : "false")
+            default:        userValues.append("")
+            }
+        }
+        return (try? TemplateResolver.resolveAll(segments, userValues: userValues)) ?? draft.template
+    }
+
     private var previewRow: some View {
         HStack {
             Text("Preview:").font(.caption).foregroundStyle(.secondary)
-            Text((try? TemplateResolver.resolveAll(segments)) ?? draft.template)
+            Text(previewText)
                 .font(.system(.body, design: .monospaced))
                 .lineLimit(1).truncationMode(.tail)
             Spacer()
@@ -243,7 +304,8 @@ struct ChipRowView: View {
     @State private var showCustomFormat = false
 
     private var isDateFormatType: Bool {
-        [SegmentType.currentDate, .currentTime, .currentDateTime].contains(segment.type)
+        [SegmentType.currentDate, .currentTime, .currentDateTime,
+         .quarterStart, .quarterEnd].contains(segment.type)
     }
 
     private static func dateFormats(for type: SegmentType) -> [DateFormatOption] {
@@ -268,6 +330,13 @@ struct ChipRowView: View {
                 DateFormatOption(label: "Full",       format: "YYYY-MM-DD HH:mm:ss"),
                 DateFormatOption(label: "European",   format: "DD.MM.YYYY HH:mm"),
                 DateFormatOption(label: "US",         format: "MM/DD/YYYY HH:mm"),
+            ]
+        case .quarterStart, .quarterEnd:
+            return [
+                DateFormatOption(label: "ISO 8601",   format: "YYYY-MM-DD"),
+                DateFormatOption(label: "US",         format: "MM/DD/YYYY"),
+                DateFormatOption(label: "European",   format: "DD.MM.YYYY"),
+                DateFormatOption(label: "Compact",    format: "YYYYMMDD"),
             ]
         default: return []
         }
@@ -365,6 +434,89 @@ struct ChipRowView: View {
             ))
             .textFieldStyle(.roundedBorder).font(.caption)
             .frame(maxWidth: 130)
+        }
+    }
+}
+
+// MARK: - PaletteResizeHandle
+
+/// NSViewRepresentable drag handle that tracks the mouse in stable window
+/// coordinates. SwiftUI's DragGesture re-measures translation in the view's
+/// local space; when the VStack reflows as paletteHeight changes the handle
+/// position shifts and the gesture reads spurious deltas, causing flicker.
+/// Tracking in window space avoids that entirely.
+struct PaletteResizeHandle: NSViewRepresentable {
+    @Binding var height: CGFloat
+    let minHeight: CGFloat
+    let maxHeight: CGFloat
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(height: $height, minHeight: minHeight, maxHeight: maxHeight)
+    }
+
+    func makeNSView(context: Context) -> HandleNSView {
+        HandleNSView(coordinator: context.coordinator)
+    }
+
+    func updateNSView(_ nsView: HandleNSView, context: Context) {}
+
+    // MARK: Coordinator
+
+    final class Coordinator {
+        @Binding var height: CGFloat
+        let minHeight: CGFloat
+        let maxHeight: CGFloat
+        var startHeight: CGFloat = 0
+        var startWindowY: CGFloat = 0
+
+        init(height: Binding<CGFloat>, minHeight: CGFloat, maxHeight: CGFloat) {
+            _height    = height
+            self.minHeight = minHeight
+            self.maxHeight = maxHeight
+        }
+    }
+
+    // MARK: NSView
+
+    final class HandleNSView: NSView {
+        let coordinator: Coordinator
+
+        init(coordinator: Coordinator) {
+            self.coordinator = coordinator
+            super.init(frame: .zero)
+            wantsLayer = true
+        }
+        required init?(coder: NSCoder) { fatalError() }
+
+        override func draw(_ dirtyRect: NSRect) {
+            // Hairline separator
+            NSColor.separatorColor.setFill()
+            NSRect(x: 0, y: bounds.midY.rounded() - 0.5,
+                   width: bounds.width, height: 1).fill()
+            // Pill grip
+            let pill = NSRect(x: bounds.midX - 16, y: bounds.midY - 2, width: 32, height: 4)
+            let path = NSBezierPath(roundedRect: pill, xRadius: 2, yRadius: 2)
+            NSColor.tertiaryLabelColor.setFill()
+            path.fill()
+        }
+
+        override func resetCursorRects() {
+            addCursorRect(bounds, cursor: .resizeUpDown)
+        }
+
+        override func mouseDown(with event: NSEvent) {
+            coordinator.startHeight  = coordinator.height
+            coordinator.startWindowY = event.locationInWindow.y
+        }
+
+        override func mouseDragged(with event: NSEvent) {
+            // NSView y-axis: positive = upward.
+            // Dragging UP → deltaY > 0 → palette grows.
+            // Dragging DOWN → deltaY < 0 → palette shrinks.
+            let deltaY = event.locationInWindow.y - coordinator.startWindowY
+            coordinator.height = max(coordinator.minHeight,
+                                     min(coordinator.maxHeight,
+                                         coordinator.startHeight + deltaY))
         }
     }
 }
