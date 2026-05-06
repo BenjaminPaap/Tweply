@@ -14,9 +14,10 @@ docker:
   stage: docker
   image: docker:27
   before_script:
+    - apk add --no-cache zip
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.paap.one
   script:
-    - cd dist && zip -r -y Tweply.zip Tweply.app && cd ..
+    - (cd dist && zip -r -y Tweply.zip Tweply.app)
     - docker build --build-arg VERSION=$CI_COMMIT_SHA -t $IMAGE:$CI_COMMIT_SHA -t $IMAGE:latest .
     - docker push $IMAGE:$CI_COMMIT_SHA
     - docker push $IMAGE:latest
