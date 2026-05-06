@@ -1,55 +1,28 @@
 stages:
-  - build
   - docker
   - deploy
 
 variables:
-  IMAGE: registry.gitlab.paap.one/tweply/app
+  IMAGE: registry.gitlab.paap.one/benjamin/tweply
 
-# ── Build ─────────────────────────────────────────────────────────────────────
-# Requires a macOS GitLab runner with Xcode installed.
-# Code signing must be configured on the runner (Developer ID certificate in
-# the system keychain). Remove the CODE_SIGN_* overrides once signing is set up.
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Expects dist/Tweply.zip to be committed to the repository.
+# Build locally, zip, commit, and push to trigger a new deployment.
 
-build:
-  stage: build
-  tags: [macos]
+docker:
+  stage: docker
+  tags: [docker]
   script:
-    - xcodebuild build
-        -project TweplySwift.xcodeproj
-        -scheme Tweply
-        -configuration Release
-        -derivedDataPath build
-        CODE_SIGN_IDENTITY=""
-        CODE_SIGNING_REQUIRED=NO
-        CODE_SIGNING_ALLOWED=NO
-    - mkdir -p dist
-    - ditto -c -k --sequesterRsrc --keepParent
-        build/Build/Products/Release/Tweply.app
-        dist/Tweply.zip
+    - cd dist && zip -r -y Tweply.zip Tweply.app && cd ..
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.paap.one
+    - docker build --build-arg VERSION=$CI_COMMIT_SHORT_SHA -t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest .
+    - docker push $IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $IMAGE:latest
     - |
       curl --fail --silent \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --upload-file dist/Tweply.zip \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tweply/${CI_COMMIT_SHORT_SHA}/Tweply.zip"
-  artifacts:
-    paths:
-      - dist/Tweply.zip
-    expire_in: 1h
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-
-# ── Docker ────────────────────────────────────────────────────────────────────
-
-docker:
-  stage: docker
-  tags: [docker]
-  needs: [build]
-  script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.paap.one
-    - docker build --build-arg VERSION=$CI_COMMIT_SHORT_SHA -t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest .
-    - docker push $IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker push $IMAGE:latest
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 

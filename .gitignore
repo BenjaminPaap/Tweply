@@ -2,7 +2,12 @@
 *.xcuserstate
 xcuserdata/
 .build/
+build/
 DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Keep the manually built app bundle
+!dist/
+!dist/Tweply.app
