@@ -11,7 +11,6 @@ variables:
 
 docker:
   stage: docker
-  tags: [docker]
   script:
     - cd dist && zip -r -y Tweply.zip Tweply.app && cd ..
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.paap.one
@@ -31,7 +30,6 @@ docker:
 
 deploy:
   stage: deploy
-  tags: [kubernetes]
   needs: [docker]
   script:
     - helm upgrade --install tweply infrastructure/helm
