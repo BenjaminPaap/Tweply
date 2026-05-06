@@ -1,0 +1,22 @@
+image:
+  repository: registry.gitlab.paap.one/tweply/app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: gitlab-registry
+
+replicaCount: 1
+
+ingress:
+  host: tweply.paap.one
+  certIssuer: letsencrypt
+  tlsSecretName: tweply-tls
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi

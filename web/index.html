@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweply — Smart Templates &amp; Clipboard Manager</title>
+    <meta name="description" content="Tweply is a macOS menu bar app for smart text templates and clipboard history.">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 64px 56px 48px;
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 2px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        .icon {
+            width: 112px;
+            height: 112px;
+            background: linear-gradient(145deg, #b56fff, #7b22d9);
+            border-radius: 25px;
+            margin: 0 auto 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 58px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -2px;
+            box-shadow: 0 8px 24px rgba(123, 34, 217, 0.35);
+        }
+
+        h1 {
+            font-size: 52px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            line-height: 1;
+            margin-bottom: 14px;
+        }
+
+        .subtitle {
+            font-size: 19px;
+            color: #6e6e73;
+            line-height: 1.5;
+            margin-bottom: 44px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #0071e3;
+            color: #fff;
+            text-decoration: none;
+            padding: 15px 44px;
+            border-radius: 980px;
+            font-size: 17px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+            transition: background 0.15s ease;
+            margin-bottom: 20px;
+        }
+        .btn:hover { background: #0077ed; }
+
+        .meta {
+            font-size: 13px;
+            color: #6e6e73;
+            line-height: 1.6;
+        }
+
+        .features {
+            margin-top: 44px;
+            padding-top: 36px;
+            border-top: 1px solid #f0f0f0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            text-align: left;
+        }
+
+        .feature {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .feature-dot {
+            width: 7px;
+            height: 7px;
+            background: #9a50ff;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .feature p {
+            font-size: 14px;
+            color: #3a3a3c;
+            line-height: 1.4;
+        }
+
+        footer {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #aeaeb2;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">T</div>
+
+        <h1>Tweply</h1>
+        <p class="subtitle">
+            Smart Templates &amp; Clipboard Manager<br>
+            for macOS — always one shortcut away.
+        </p>
+
+        <a href="/Tweply.zip" class="btn">Download for Mac</a>
+
+        <p class="meta">
+            Free · macOS 14 or later · Menu bar app
+        </p>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <p>Dynamic placeholders — dates, UUIDs, usernames &amp; more</p>
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <p>Full clipboard history with search &amp; password obfuscation</p>
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <p>Global keyboard shortcut — no Dock footprint</p>
+            </div>
+            <div class="feature">
+                <div class="feature-dot"></div>
+                <p>Import &amp; export templates as JSON</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; <script>document.write(new Date().getFullYear())</script> Benjamin Paap
+    </footer>
+</body>
+</html>

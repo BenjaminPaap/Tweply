@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tweply-tls
+  namespace: tweply
+spec:
+  secretName: {{ .Values.ingress.tlsSecretName }}
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.ingress.certIssuer }}
+  dnsNames:
+    - {{ .Values.ingress.host }}
