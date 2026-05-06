@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB9882CE2FAB9D3D0003437C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CB9882CD2FAB9D3D0003437C /* Assets.xcassets */; };
 		D040000000000000000000AB /* TweplySwiftApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020000000000000000000AB /* TweplySwiftApp.swift */; };
 		D041000000000000000000AB /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = D023000000000000000000AB /* Template.swift */; };
 		D042000000000000000000AB /* TemplateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024000000000000000000AB /* TemplateParser.swift */; };
@@ -24,15 +25,17 @@
 		D04E000000000000000000AB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D030000000000000000000AB /* SettingsView.swift */; };
 		D04F000000000000000000AB /* TemplateEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D031000000000000000000AB /* TemplateEditorView.swift */; };
 		D050000000000000000000AB /* ChoicePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032000000000000000000AB /* ChoicePickerView.swift */; };
-		D051000000000000000000AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D022000000000000000000AB /* Assets.xcassets */; };
 		D053000000000000000000AB /* IconPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D033000000000000000000AB /* IconPickerView.swift */; };
+		D054000000000000000000AB /* ClipboardHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D034000000000000000000AB /* ClipboardHistoryItem.swift */; };
+		D055000000000000000000AB /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D035000000000000000000AB /* ClipboardManager.swift */; };
+		D060100000000000000000AB /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D060000100000000000000AB /* HotKeyManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CB9882CD2FAB9D3D0003437C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D003000000000000000000AB /* Tweply.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tweply.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D020000000000000000000AB /* TweplySwiftApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweplySwiftApp.swift; sourceTree = "<group>"; };
 		D021000000000000000000AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D022000000000000000000AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D023000000000000000000AB /* Template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Template.swift; sourceTree = "<group>"; };
 		D024000000000000000000AB /* TemplateParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateParser.swift; sourceTree = "<group>"; };
 		D025000000000000000000AB /* TemplateResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateResolver.swift; sourceTree = "<group>"; };
@@ -50,6 +53,9 @@
 		D031000000000000000000AB /* TemplateEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateEditorView.swift; sourceTree = "<group>"; };
 		D032000000000000000000AB /* ChoicePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoicePickerView.swift; sourceTree = "<group>"; };
 		D033000000000000000000AB /* IconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconPickerView.swift; sourceTree = "<group>"; };
+		D034000000000000000000AB /* ClipboardHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryItem.swift; sourceTree = "<group>"; };
+		D035000000000000000000AB /* ClipboardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardManager.swift; sourceTree = "<group>"; };
+		D060000100000000000000AB /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,10 +90,11 @@
 			children = (
 				D020000000000000000000AB /* TweplySwiftApp.swift */,
 				D021000000000000000000AB /* Info.plist */,
-				D022000000000000000000AB /* Assets.xcassets */,
+				CB9882CD2FAB9D3D0003437C /* Assets.xcassets */,
 				D00A000000000000000000AB /* Models */,
 				D00B000000000000000000AB /* Core */,
 				D00D000000000000000000AB /* Store */,
+				D060000000000000000000AB /* Clipboard */,
 				D00E000000000000000000AB /* StatusBar */,
 				D00F000000000000000000AB /* Views */,
 			);
@@ -139,6 +146,7 @@
 			isa = PBXGroup;
 			children = (
 				D02F000000000000000000AB /* StatusBarController.swift */,
+				D060000100000000000000AB /* HotKeyManager.swift */,
 			);
 			path = StatusBar;
 			sourceTree = "<group>";
@@ -152,6 +160,15 @@
 				D033000000000000000000AB /* IconPickerView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		D060000000000000000000AB /* Clipboard */ = {
+			isa = PBXGroup;
+			children = (
+				D034000000000000000000AB /* ClipboardHistoryItem.swift */,
+				D035000000000000000000AB /* ClipboardManager.swift */,
+			);
+			path = Clipboard;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -212,7 +229,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D051000000000000000000AB /* Assets.xcassets in Resources */,
+				CB9882CE2FAB9D3D0003437C /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,10 +254,13 @@
 				D04B000000000000000000AB /* InteractivePlaceholders.swift in Sources */,
 				D04C000000000000000000AB /* DataStore.swift in Sources */,
 				D04D000000000000000000AB /* StatusBarController.swift in Sources */,
+				D060100000000000000000AB /* HotKeyManager.swift in Sources */,
 				D04E000000000000000000AB /* SettingsView.swift in Sources */,
 				D04F000000000000000000AB /* TemplateEditorView.swift in Sources */,
 				D050000000000000000000AB /* ChoicePickerView.swift in Sources */,
 				D053000000000000000000AB /* IconPickerView.swift in Sources */,
+				D054000000000000000000AB /* ClipboardHistoryItem.swift in Sources */,
+				D055000000000000000000AB /* ClipboardManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -377,11 +397,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_ENTITLEMENTS = TweplySwift/TweplySwift.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7YL8E9F9H4;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -406,11 +426,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = NO;
-				CODE_SIGN_ENTITLEMENTS = "";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = TweplySwift/TweplySwift.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7YL8E9F9H4;
 				ENABLE_HARDENED_RUNTIME = YES;

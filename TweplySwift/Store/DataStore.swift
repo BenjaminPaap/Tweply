@@ -3,7 +3,8 @@ import AppKit
 import UniformTypeIdentifiers
 
 extension Notification.Name {
-    static let templatesDidChange = Notification.Name("tweply.templatesDidChange")
+    static let templatesDidChange  = Notification.Name("tweply.templatesDidChange")
+    static let settingsDidChange   = Notification.Name("tweply.settingsDidChange")
 }
 
 final class DataStore: @unchecked Sendable {
@@ -54,6 +55,7 @@ final class DataStore: @unchecked Sendable {
     func saveSettings(_ settings: AppSettings) {
         guard let data = try? JSONEncoder().encode(settings) else { return }
         try? data.write(to: settingsURL)
+        NotificationCenter.default.post(name: .settingsDidChange, object: nil)
     }
 
     // MARK: - Counters
@@ -74,6 +76,22 @@ final class DataStore: @unchecked Sendable {
         counters[id]     = current + step
         if let data = try? JSONEncoder().encode(counters) { try? data.write(to: countersURL) }
         return String(current)
+    }
+
+    // MARK: - Clipboard History
+
+    private var clipboardHistoryURL: URL { appSupportURL.appendingPathComponent("clipboard_history.json") }
+
+    func loadClipboardHistory() -> [ClipboardHistoryItem] {
+        guard let data  = try? Data(contentsOf: clipboardHistoryURL),
+              let items = try? JSONDecoder().decode([ClipboardHistoryItem].self, from: data)
+        else { return [] }
+        return items
+    }
+
+    func saveClipboardHistory(_ items: [ClipboardHistoryItem]) {
+        guard let data = try? JSONEncoder().encode(items) else { return }
+        try? data.write(to: clipboardHistoryURL)
     }
 
     // MARK: - Export / Import

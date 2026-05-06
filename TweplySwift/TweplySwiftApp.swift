@@ -5,8 +5,8 @@ struct TweplySwiftApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // No persistent windows — everything lives in the status bar menu.
-        // A Settings scene is required for macOS apps without a main window.
+        // Settings scene must be declared so the app is valid on macOS,
+        // but the actual window is managed by StatusBarController via NSHostingController.
         Settings { EmptyView() }
     }
 }
@@ -28,10 +28,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Hide from Dock — this is a menu-bar-only app
         NSApp.setActivationPolicy(.accessory)
 
+        // Start clipboard history monitoring
+        ClipboardManager.shared.start()
+
         // Build the status bar menu
         let controller = StatusBarController()
         controller.setup()
         statusBar = controller
+
+        // Register global hotkey
+        let settings = DataStore.shared.loadSettings()
+        HotKeyManager.shared.onActivate = { [weak controller] in
+            controller?.openMenu()
+        }
+        HotKeyManager.shared.apply(settings: settings)
+
+        NotificationCenter.default.addObserver(
+            forName: .settingsDidChange,
+            object: nil,
+            queue: .main
+        ) { _ in
+            let s = DataStore.shared.loadSettings()
+            HotKeyManager.shared.apply(settings: s)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

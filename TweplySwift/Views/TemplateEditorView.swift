@@ -176,32 +176,32 @@ struct TemplateEditorView: View {
 
     private var paletteArea: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 10) {
                 ForEach(SegmentCategory.allCases, id: \.self) { cat in
                     paletteRow(for: cat)
                 }
             }
             .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: paletteHeight)
     }
 
     private func paletteRow(for cat: SegmentCategory) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Text("\(cat.rawValue):")
-                .font(.caption).foregroundStyle(.secondary)
-                .frame(width: 70, alignment: .trailing)
-                .padding(.top, 3)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
-                    if cat == .text {
-                        Button("Text") { appendChip(Segment(type: .text, value: "text")) }
-                            .buttonStyle(.bordered).font(.caption)
-                    } else {
-                        ForEach(cat.types, id: \.self) { type in
-                            Button(type.rawValue) { appendChip(defaultSegment(for: type)) }
-                                .buttonStyle(.bordered).font(.caption).tint(cat.color)
-                        }
+        VStack(alignment: .leading, spacing: 4) {
+            Text(cat.rawValue)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .textCase(.uppercase)
+
+            FlowLayout(spacing: 4) {
+                if cat == .text {
+                    Button("Text") { appendChip(Segment(type: .text, value: "text")) }
+                        .buttonStyle(.bordered).font(.caption)
+                } else {
+                    ForEach(cat.types, id: \.self) { type in
+                        Button(type.shortName) { appendChip(defaultSegment(for: type)) }
+                            .buttonStyle(.bordered).font(.caption).tint(cat.color)
                     }
                 }
             }
@@ -518,5 +518,61 @@ struct PaletteResizeHandle: NSViewRepresentable {
                                      min(coordinator.maxHeight,
                                          coordinator.startHeight + deltaY))
         }
+    }
+}
+
+// MARK: - FlowLayout
+
+/// A layout that arranges subviews in left-to-right rows, wrapping to a new
+/// line whenever the next item would exceed the available width.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 4
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = makeRows(maxWidth: proposal.width ?? .infinity, subviews: subviews)
+        let height = rows.map(\.height).reduce(0, +) + CGFloat(max(0, rows.count - 1)) * spacing
+        return CGSize(width: proposal.width ?? 0, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let rows = makeRows(maxWidth: bounds.width, subviews: subviews)
+        var y = bounds.minY
+        for row in rows {
+            var x = bounds.minX
+            for item in row.items {
+                item.subview.place(at: CGPoint(x: x, y: y),
+                                   proposal: ProposedViewSize(width: item.width, height: row.height))
+                x += item.width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    // MARK: Private
+
+    private struct Row {
+        var items: [(subview: LayoutSubviews.Element, width: CGFloat)] = []
+        var height: CGFloat = 0
+    }
+
+    private func makeRows(maxWidth: CGFloat, subviews: Subviews) -> [Row] {
+        var rows: [Row] = []
+        var current = Row()
+        var rowWidth: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            let needed = rowWidth == 0 ? size.width : rowWidth + spacing + size.width
+            if needed > maxWidth, !current.items.isEmpty {
+                rows.append(current)
+                current  = Row()
+                rowWidth = 0
+            }
+            current.items.append((subview, size.width))
+            current.height = max(current.height, size.height)
+            rowWidth       = rowWidth == 0 ? size.width : rowWidth + spacing + size.width
+        }
+        if !current.items.isEmpty { rows.append(current) }
+        return rows
     }
 }
