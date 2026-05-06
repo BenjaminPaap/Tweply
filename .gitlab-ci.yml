@@ -3,39 +3,50 @@ stages:
   - deploy
 
 variables:
+  DOCKER_HOST: unix:///var/run/docker.sock
   IMAGE: registry.gitlab.paap.one/benjamin/tweply
 
 # ── Docker ────────────────────────────────────────────────────────────────────
-# Expects dist/Tweply.zip to be committed to the repository.
-# Build locally, zip, commit, and push to trigger a new deployment.
+# Expects dist/Tweply.app to be committed to the repository.
+# Build locally, place Tweply.app in dist/, commit and push to trigger.
 
 docker:
   stage: docker
+  image: docker:27
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.paap.one
   script:
     - cd dist && zip -r -y Tweply.zip Tweply.app && cd ..
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.paap.one
-    - docker build --build-arg VERSION=$CI_COMMIT_SHORT_SHA -t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest .
-    - docker push $IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker build --build-arg VERSION=$CI_COMMIT_SHA -t $IMAGE:$CI_COMMIT_SHA -t $IMAGE:latest .
+    - docker push $IMAGE:$CI_COMMIT_SHA
     - docker push $IMAGE:latest
     - |
       curl --fail --silent \
         --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --upload-file dist/Tweply.zip \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tweply/${CI_COMMIT_SHORT_SHA}/Tweply.zip"
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tweply/${CI_COMMIT_SHA}/Tweply.zip"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
 # ── Deploy ────────────────────────────────────────────────────────────────────
-# Requires KUBECONFIG to be set as a CI/CD variable (file type).
+# Requires KUBECONFIG_B64 to be set as a CI/CD variable (base64-encoded kubeconfig).
 
 deploy:
   stage: deploy
-  needs: [docker]
+  image:
+    name: alpine/helm:3.14.4
+    entrypoint: [""]
+  before_script:
+    - echo "$KUBECONFIG_B64" | base64 -d > /tmp/kubeconfig
+    - chmod 600 /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
   script:
-    - helm upgrade --install tweply infrastructure/helm
-        --namespace tweply
-        --create-namespace
-        --set image.tag=$CI_COMMIT_SHORT_SHA
-        --wait
+    - |
+      helm upgrade --install tweply infrastructure/helm \
+        --namespace tweply \
+        --create-namespace \
+        --set image.tag=$CI_COMMIT_SHA \
+        --wait --timeout=5m
+  needs: [docker]
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
