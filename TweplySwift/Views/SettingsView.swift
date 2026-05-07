@@ -189,7 +189,7 @@ struct GeneralTab: View {
 
     var body: some View {
         Form {
-            Section("Keyboard Shortcut") {
+            Section("Open Menu Shortcut") {
                 Toggle("Enable global shortcut", isOn: $settings.hotkeyEnabled)
                     .onChange(of: settings.hotkeyEnabled) { _, _ in
                         DataStore.shared.saveSettings(settings)
@@ -202,6 +202,25 @@ struct GeneralTab: View {
                         Text("⌘⌥V").tag(2)
                         Text("⌃⌥V").tag(3)
                     }
+                }
+            }
+
+            Section("Open Menu & Paste Shortcut") {
+                Toggle("Enable paste shortcut", isOn: $settings.pasteHotkeyEnabled)
+                    .onChange(of: settings.pasteHotkeyEnabled) { _, _ in
+                        DataStore.shared.saveSettings(settings)
+                    }
+
+                if settings.pasteHotkeyEnabled {
+                    Picker("Shortcut", selection: pasteHotkeyPresetBinding) {
+                        Text("⌘⇧C").tag(0)
+                        Text("⌘⇧V").tag(1)
+                        Text("⌘⌥V").tag(2)
+                        Text("⌃⌥V").tag(3)
+                    }
+                    Text("Requires Accessibility access on first use.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -229,6 +248,30 @@ struct GeneralTab: View {
     }
 
     // Maps (keyCode, modifiers) pairs to preset index and back
+    private var pasteHotkeyPresetBinding: Binding<Int> {
+        Binding(
+            get: {
+                switch (settings.pasteHotkeyKeyCode, settings.pasteHotkeyModifiers) {
+                case (8, 768):  return 0  // ⌘⇧C
+                case (9, 768):  return 1  // ⌘⇧V
+                case (9, 2816): return 2  // ⌘⌥V
+                case (9, 6144): return 3  // ⌃⌥V
+                default:        return 1
+                }
+            },
+            set: { idx in
+                switch idx {
+                case 0: settings.pasteHotkeyKeyCode = 8;  settings.pasteHotkeyModifiers = 768
+                case 1: settings.pasteHotkeyKeyCode = 9;  settings.pasteHotkeyModifiers = 768
+                case 2: settings.pasteHotkeyKeyCode = 9;  settings.pasteHotkeyModifiers = 2816
+                case 3: settings.pasteHotkeyKeyCode = 9;  settings.pasteHotkeyModifiers = 6144
+                default: break
+                }
+                DataStore.shared.saveSettings(settings)
+            }
+        )
+    }
+
     private var hotkeyPresetBinding: Binding<Int> {
         Binding(
             get: {

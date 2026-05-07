@@ -231,4 +231,7 @@ struct AppSettings: Codable {
     var hotkeyEnabled: Bool = true
     var hotkeyKeyCode: Int = 8          // C
     var hotkeyModifiers: Int = 768      // Cmd+Shift (256+512)
+    var pasteHotkeyEnabled: Bool = true
+    var pasteHotkeyKeyCode: Int = 9     // V
+    var pasteHotkeyModifiers: Int = 768 // Cmd+Shift (256+512)
 }

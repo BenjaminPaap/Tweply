@@ -222,7 +222,7 @@ final class StatusBarController {
             empty.isEnabled = false
             menu.addItem(empty)
         } else {
-            for item in items {
+            for item in items.prefix(settings.menuClipboardRows) {
                 let menuItem = makeClipboardMenuItem(item: item, settings: settings)
                 menu.addItem(menuItem)
                 clipboardMenuItems.append(menuItem)
@@ -317,10 +317,18 @@ final class StatusBarController {
 
     private func simulatePaste() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            if !AXIsProcessTrusted() {
-                // Prompt the user to grant Accessibility access in System Settings.
-                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-                AXIsProcessTrustedWithOptions(options)
+            guard AXIsProcessTrusted() else {
+                let alert = NSAlert()
+                alert.messageText     = "Accessibility Access Required"
+                alert.informativeText = "To paste automatically, Tweply needs Accessibility access. Click Open Settings, enable Tweply under Accessibility, then try again."
+                alert.alertStyle      = .informational
+                alert.addButton(withTitle: "Open Settings")
+                alert.addButton(withTitle: "Later")
+                if alert.runModal() == .alertFirstButtonReturn {
+                    NSWorkspace.shared.open(
+                        URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                    )
+                }
                 return
             }
             let src = CGEventSource(stateID: .hidSystemState)
@@ -328,8 +336,8 @@ final class StatusBarController {
                   let keyUp   = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false) else { return }
             keyDown.flags = .maskCommand
             keyUp.flags   = .maskCommand
-            keyDown.post(tap: .cgAnnotatedSessionEventTap)
-            keyUp.post(tap: .cgAnnotatedSessionEventTap)
+            keyDown.post(tap: .cghidEventTap)
+            keyUp.post(tap: .cghidEventTap)
         }
     }
 

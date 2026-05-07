@@ -44,9 +44,17 @@ final class HotKeyManager {
                                 UInt32(settings.hotkeyModifiers),
                                 hkID, GetApplicationEventTarget(), 0, &hotKeyRef)
         }
-        // Cmd+Shift+V (keyCode 9, modifiers 768) is always registered as the paste hotkey.
-        let hkID2 = EventHotKeyID(signature: fourCharCode("TWPL"), id: 2)
-        RegisterEventHotKey(9, 768, hkID2, GetApplicationEventTarget(), 0, &pasteHotKeyRef)
+        if settings.pasteHotkeyEnabled {
+            let conflictsWithMain = settings.hotkeyEnabled
+                                    && settings.pasteHotkeyKeyCode == settings.hotkeyKeyCode
+                                    && settings.pasteHotkeyModifiers == settings.hotkeyModifiers
+            if !conflictsWithMain {
+                let hkID2 = EventHotKeyID(signature: fourCharCode("TWPL"), id: 2)
+                RegisterEventHotKey(UInt32(settings.pasteHotkeyKeyCode),
+                                    UInt32(settings.pasteHotkeyModifiers),
+                                    hkID2, GetApplicationEventTarget(), 0, &pasteHotKeyRef)
+            }
+        }
     }
 
     private func installEventHandler() {
