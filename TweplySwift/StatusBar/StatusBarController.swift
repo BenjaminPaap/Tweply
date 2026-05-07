@@ -59,31 +59,6 @@ extension SearchMenuItemView: NSSearchFieldDelegate {
         onChange?(field.stringValue)
     }
 
-    // Intercept ↑/↓ while the search field has focus and re-post them as plain
-    // NSEvents so NSMenu's tracking loop picks them up for item navigation.
-    func control(_ control: NSControl, textView: NSTextView,
-                 doCommandBy commandSelector: Selector) -> Bool {
-        let isDown = commandSelector == #selector(NSResponder.moveDown(_:))
-        let isUp   = commandSelector == #selector(NSResponder.moveUp(_:))
-        guard isDown || isUp else { return false }
-        let keyCode: CGKeyCode = isDown ? 125 : 126
-        let chars = isDown ? "\u{F701}" : "\u{F700}"   // private-use arrow scalars NSMenu expects
-        if let event = NSEvent.keyEvent(
-            with: .keyDown,
-            location: .zero,
-            modifierFlags: [],
-            timestamp: ProcessInfo.processInfo.systemUptime,
-            windowNumber: 0,
-            context: nil,
-            characters: chars,
-            charactersIgnoringModifiers: chars,
-            isARepeat: false,
-            keyCode: keyCode
-        ) {
-            NSApp.postEvent(event, atStart: false)
-        }
-        return true   // tell the field editor we handled it
-    }
 }
 
 // MARK: - StatusBarController
