@@ -36,10 +36,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.setup()
         statusBar = controller
 
-        // Register global hotkey
+        // Register global hotkeys
         let settings = DataStore.shared.loadSettings()
         HotKeyManager.shared.onActivate = { [weak controller] in
             controller?.openMenu()
+        }
+        HotKeyManager.shared.onActivateAndPaste = { [weak controller] in
+            controller?.openMenuAndPaste()
         }
         HotKeyManager.shared.apply(settings: settings)
 

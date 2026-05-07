@@ -67,21 +67,33 @@ final class PickerState: ObservableObject {
     }
 
     private func handleKey(_ event: NSEvent) -> NSEvent? {
-        // Let text views handle their own keys
+        // Let text views handle their own keys (input / textArea fields)
         if NSApp.keyWindow?.firstResponder is NSTextView { return event }
 
-        // Only handle unmodified keys
+        switch Int(event.keyCode) {
+        case 53: // Escape — cancel
+            onComplete?(nil)
+            return nil
+
+        case 36, 76: // Return / numpad Enter — confirm if all fields are filled
+            if allFilled { onComplete?(values) }
+            return nil
+
+        default: break
+        }
+
+        // Only handle remaining keys if they are unmodified
         let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
         guard flags.isEmpty else { return event }
 
         guard let (selectIdx, opts) = firstSelectPair() else { return event }
 
         switch Int(event.keyCode) {
-        case 125: // ↓
+        case 125: // ↓ — navigate, do not auto-complete
             highlighted[selectIdx] = min(highlighted[selectIdx] + 1, opts.count - 1)
             values[selectIdx]      = opts[highlighted[selectIdx]]
             return nil
-        case 126: // ↑
+        case 126: // ↑ — navigate, do not auto-complete
             highlighted[selectIdx] = max(highlighted[selectIdx] - 1, 0)
             values[selectIdx]      = opts[highlighted[selectIdx]]
             return nil
@@ -89,6 +101,7 @@ final class PickerState: ObservableObject {
             if let chars = event.characters, let n = Int(chars), n >= 1, n <= opts.count {
                 highlighted[selectIdx] = n - 1
                 values[selectIdx]      = opts[n - 1]
+                if allFilled { onComplete?(values) }
                 return nil
             }
         }
@@ -128,12 +141,9 @@ struct ChoicePickerView: View {
                 .padding(14)
             }
             .frame(maxHeight: 440)
-            Divider()
-            footer
         }
         .frame(width: 420)
         .onAppear {
-            // Focus first text-input descriptor
             focusedIndex = state.descriptors.firstIndex {
                 if case .input = $0.kind { return true }
                 if case .number = $0.kind { return true }
@@ -144,30 +154,17 @@ struct ChoicePickerView: View {
         .onDisappear { state.removeKeyMonitor() }
     }
 
-    // MARK: Header / Footer
+    // MARK: Header
 
     private var header: some View {
         VStack(spacing: 2) {
             Text("Fill in the values")
                 .font(.headline)
-            Text("↑↓ arrows · 1–9 keys · ⌘↩ to copy")
+            Text("↑↓ or 1–9 to pick · ↩ to confirm · esc to cancel")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 12)
-    }
-
-    private var footer: some View {
-        HStack {
-            Button("Cancel") { state.onComplete?(nil) }
-                .keyboardShortcut(.escape, modifiers: [])
-            Spacer()
-            Button("Copy") { state.onComplete?(state.values) }
-                .keyboardShortcut(.return, modifiers: .command)
-                .disabled(!state.allFilled)
-                .buttonStyle(.borderedProminent)
-        }
-        .padding(12)
     }
 
     // MARK: Field dispatch
@@ -196,6 +193,7 @@ struct ChoicePickerView: View {
                     Button {
                         state.highlighted[index] = i
                         state.values[index]      = option
+                        if state.allFilled { state.onComplete?(state.values) }
                     } label: {
                         HStack(spacing: 8) {
                             Text("\(i + 1)")

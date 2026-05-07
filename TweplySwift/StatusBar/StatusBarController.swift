@@ -58,6 +58,32 @@ extension SearchMenuItemView: NSSearchFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         onChange?(field.stringValue)
     }
+
+    // Intercept ↑/↓ while the search field has focus and re-post them as plain
+    // NSEvents so NSMenu's tracking loop picks them up for item navigation.
+    func control(_ control: NSControl, textView: NSTextView,
+                 doCommandBy commandSelector: Selector) -> Bool {
+        let isDown = commandSelector == #selector(NSResponder.moveDown(_:))
+        let isUp   = commandSelector == #selector(NSResponder.moveUp(_:))
+        guard isDown || isUp else { return false }
+        let keyCode: CGKeyCode = isDown ? 125 : 126
+        let chars = isDown ? "\u{F701}" : "\u{F700}"   // private-use arrow scalars NSMenu expects
+        if let event = NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: ProcessInfo.processInfo.systemUptime,
+            windowNumber: 0,
+            context: nil,
+            characters: chars,
+            charactersIgnoringModifiers: chars,
+            isARepeat: false,
+            keyCode: keyCode
+        ) {
+            NSApp.postEvent(event, atStart: false)
+        }
+        return true   // tell the field editor we handled it
+    }
 }
 
 // MARK: - StatusBarController
@@ -73,15 +99,24 @@ final class StatusBarController {
     private let menu = NSMenu()
     private var menuDelegate: StatusBarMenuDelegate?
     private var isMenuOpen = false
-    private var historyScrollView: ClipboardScrollMenuItemView?
+
+    // Paste mode: set to true when the paste hotkey fires; cleared after use or on menu close.
+    private var pasteAfterCopy = false
+
+    // References to clipboard NSMenuItems for search filtering.
+    private var clipboardMenuItems: [NSMenuItem] = []
 
     func openMenu() {
         rebuildMenu()
         let position = NSEvent.mouseLocation
-        // Convert to screen coordinates and pop the menu at the cursor
         menu.popUp(positioning: nil,
                    at: NSPoint(x: position.x, y: position.y),
                    in: nil)
+    }
+
+    func openMenuAndPaste() {
+        pasteAfterCopy = true
+        openMenu()
     }
 
     func setup() {
@@ -93,7 +128,10 @@ final class StatusBarController {
 
         let delegate = StatusBarMenuDelegate()
         delegate.onWillOpen = { [weak self] in self?.menuWillOpenHandler() }
-        delegate.onDidClose = { [weak self] in self?.isMenuOpen = false }
+        delegate.onDidClose = { [weak self] in
+            self?.isMenuOpen = false
+            self?.pasteAfterCopy = false
+        }
         menuDelegate = delegate
         menu.delegate = delegate
         statusItem.menu = menu
@@ -132,7 +170,7 @@ final class StatusBarController {
 
     func rebuildMenu() {
         menu.removeAllItems()
-        historyScrollView = nil
+        clipboardMenuItems = []
 
         let settings  = DataStore.shared.loadSettings()
         let templates = DataStore.shared.loadTemplates()
@@ -209,27 +247,11 @@ final class StatusBarController {
             empty.isEnabled = false
             menu.addItem(empty)
         } else {
-            let rowH    = CGFloat(28)
-            let visible = min(items.count, settings.menuClipboardRows)
-            let scrollH = rowH * CGFloat(visible)
-
-            let scrollView = ClipboardScrollMenuItemView(
-                frame:    NSRect(x: 0, y: 0, width: 300, height: scrollH),
-                items:    items,
-                settings: settings,
-                rowHeight: rowH,
-                iconCache: &iconCache,
-                onSelect: { [weak self] item in
-                    guard let self else { return }
-                    ClipboardManager.shared.copyItem(item)
-                    self.menu.cancelTracking()
-                    self.flashTooltip("Copied!")
-                }
-            )
-            let scrollMenuItem = NSMenuItem()
-            scrollMenuItem.view = scrollView
-            menu.addItem(scrollMenuItem)
-            historyScrollView = scrollView
+            for item in items {
+                let menuItem = makeClipboardMenuItem(item: item, settings: settings)
+                menu.addItem(menuItem)
+                clipboardMenuItems.append(menuItem)
+            }
         }
 
         let clearItem = NSMenuItem(
@@ -240,6 +262,43 @@ final class StatusBarController {
         clearItem.target    = self
         clearItem.isEnabled = !items.isEmpty
         menu.addItem(clearItem)
+    }
+
+    private func makeClipboardMenuItem(item: ClipboardHistoryItem, settings: AppSettings) -> NSMenuItem {
+        var display: String
+        if item.isLikelyPassword && settings.obfuscatePasswords {
+            display = PasswordDetector.obfuscate(item.content)
+        } else {
+            display = item.content
+        }
+        display = display
+            .replacingOccurrences(of: "\n", with: "↵")
+            .replacingOccurrences(of: "\r", with: "")
+            .replacingOccurrences(of: "\t", with: "⇥")
+        if display.count > 60 { display = String(display.prefix(60)) + "…" }
+
+        let menuItem = NSMenuItem(
+            title:         display,
+            action:        #selector(activateClipboardItem(_:)),
+            keyEquivalent: ""
+        )
+        menuItem.target            = self
+        menuItem.representedObject = item
+        menuItem.toolTip           = buildTooltip(item)
+
+        if let icon = resolvedClipboardIcon(for: item, settings: settings) {
+            menuItem.image = icon
+        }
+        return menuItem
+    }
+
+    private func resolvedClipboardIcon(for item: ClipboardHistoryItem, settings: AppSettings) -> NSImage? {
+        if item.isLikelyPassword && settings.obfuscatePasswords {
+            return NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 11, weight: .regular))
+        }
+        guard let bid = item.sourceAppBundleID else { return nil }
+        return appIcon(forBundleID: bid)
     }
 
     // MARK: - App Icon Lookup
@@ -273,7 +332,30 @@ final class StatusBarController {
     // MARK: - Filtering
 
     private func filterHistory(query: String) {
-        historyScrollView?.filter(query: query)
+        for menuItem in clipboardMenuItems {
+            guard let item = menuItem.representedObject as? ClipboardHistoryItem else { continue }
+            menuItem.isHidden = !query.isEmpty && !item.content.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    // MARK: - Paste Simulation
+
+    private func simulatePaste() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            if !AXIsProcessTrusted() {
+                // Prompt the user to grant Accessibility access in System Settings.
+                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                AXIsProcessTrustedWithOptions(options)
+                return
+            }
+            let src = CGEventSource(stateID: .hidSystemState)
+            guard let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true),
+                  let keyUp   = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false) else { return }
+            keyDown.flags = .maskCommand
+            keyUp.flags   = .maskCommand
+            keyDown.post(tap: .cgAnnotatedSessionEventTap)
+            keyUp.post(tap: .cgAnnotatedSessionEventTap)
+        }
     }
 
     // MARK: - Menu Actions
@@ -287,6 +369,16 @@ final class StatusBarController {
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         ClipboardManager.shared.clearAll()
+    }
+
+    @objc private func activateClipboardItem(_ sender: NSMenuItem) {
+        guard let item = sender.representedObject as? ClipboardHistoryItem else { return }
+        ClipboardManager.shared.copyItem(item)
+        flashTooltip("Copied!")
+        if pasteAfterCopy {
+            pasteAfterCopy = false
+            simulatePaste()
+        }
     }
 
     @objc private func activateItem(_ sender: NSMenuItem) {
@@ -304,12 +396,16 @@ final class StatusBarController {
             userValues = values
         }
 
+        let shouldPaste = pasteAfterCopy
+        pasteAfterCopy = false
+
         do {
             let result = try TemplateResolver.resolveAll(segments, userValues: userValues)
             ClipboardManager.shared.markOwnWrite()
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(result, forType: .string)
             flashTooltip("Copied!")
+            if shouldPaste { simulatePaste() }
         } catch {
             flashTooltip("Error")
         }
@@ -435,167 +531,6 @@ final class WindowCloseDelegate: NSObject, NSWindowDelegate {
     private let onClose: () -> Void
     init(_ onClose: @escaping () -> Void) { self.onClose = onClose }
     func windowWillClose(_ notification: Notification) { onClose() }
-}
-
-// MARK: - ClipboardRowView
-
-final class ClipboardRowView: NSView {
-    let item: ClipboardHistoryItem
-    private let label: NSTextField
-    private let iconView: NSImageView
-    private let onSelect: () -> Void
-
-    init(frame: NSRect, item: ClipboardHistoryItem, settings: AppSettings,
-         icon: NSImage?, onSelect: @escaping () -> Void) {
-        self.item     = item
-        self.onSelect = onSelect
-
-        label    = NSTextField(labelWithString: "")
-        iconView = NSImageView()
-        super.init(frame: frame)
-        wantsLayer = true
-
-        var display: String
-        if item.isLikelyPassword && settings.obfuscatePasswords {
-            display = PasswordDetector.obfuscate(item.content)
-        } else {
-            display = item.content
-        }
-        display = display
-            .replacingOccurrences(of: "\n", with: "↵")
-            .replacingOccurrences(of: "\r", with: "")
-            .replacingOccurrences(of: "\t", with: "⇥")
-        if display.count > 60 { display = String(display.prefix(60)) + "…" }
-
-        label.stringValue       = display
-        label.lineBreakMode     = .byTruncatingTail
-        label.font              = .menuFont(ofSize: NSFont.systemFontSize(for: .regular))
-        label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
-
-        iconView.image          = icon
-        iconView.imageScaling   = .scaleProportionallyDown
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(iconView)
-
-        NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 14),
-            iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 16),
-            iconView.heightAnchor.constraint(equalToConstant: 16),
-            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 6),
-            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
-        ])
-
-        addTrackingArea(NSTrackingArea(rect: .zero,
-            options: [.activeAlways, .mouseEnteredAndExited, .inVisibleRect],
-            owner: self, userInfo: nil))
-    }
-
-    required init?(coder: NSCoder) { fatalError() }
-
-    override func mouseEntered(with event: NSEvent) { setHighlighted(true) }
-    override func mouseExited(with event: NSEvent)  { setHighlighted(false) }
-    override func mouseUp(with event: NSEvent) {
-        let p = convert(event.locationInWindow, from: nil)
-        if bounds.contains(p) { onSelect() }
-    }
-
-    private func setHighlighted(_ on: Bool) {
-        layer?.backgroundColor = on ? NSColor.selectedMenuItemColor.cgColor : nil
-        label.textColor = on ? .selectedMenuItemTextColor : .labelColor
-    }
-}
-
-// MARK: - ClipboardScrollMenuItemView
-
-final class ClipboardScrollMenuItemView: NSView {
-    private var rowViews: [ClipboardRowView] = []
-    private let scrollView   = NSScrollView()
-    private let documentView = NSView()
-    private let rowHeight: CGFloat
-    private let maxHeight: CGFloat  // capped height passed in from outside; never shrinks below this
-
-    init(frame: NSRect, items: [ClipboardHistoryItem], settings: AppSettings,
-         rowHeight: CGFloat, iconCache: inout [String: NSImage],
-         onSelect: @escaping (ClipboardHistoryItem) -> Void) {
-        self.rowHeight = rowHeight
-        self.maxHeight = frame.height
-        super.init(frame: frame)
-        autoresizingMask = [.width]
-
-        scrollView.frame                = bounds
-        scrollView.autoresizingMask     = [.width, .height]
-        scrollView.hasVerticalScroller  = true
-        scrollView.autohidesScrollers   = true
-        scrollView.drawsBackground      = false
-        scrollView.scrollerStyle        = .overlay
-        addSubview(scrollView)
-
-        let totalH = CGFloat(items.count) * rowHeight
-        documentView.frame = NSRect(x: 0, y: 0, width: frame.width, height: totalH)
-        documentView.autoresizingMask = [.width]
-        scrollView.documentView = documentView
-
-        for (idx, item) in items.enumerated() {
-            let icon = resolvedIcon(for: item, settings: settings, cache: &iconCache)
-            let y    = totalH - rowHeight * CGFloat(idx + 1)
-            let row  = ClipboardRowView(
-                frame:    NSRect(x: 0, y: y, width: frame.width, height: rowHeight),
-                item:     item,
-                settings: settings,
-                icon:     icon,
-                onSelect: { onSelect(item) }
-            )
-            row.autoresizingMask = [.width]
-            documentView.addSubview(row)
-            rowViews.append(row)
-        }
-
-        // Scroll to top
-        scrollView.contentView.scroll(to: NSPoint(x: 0, y: totalH - frame.height))
-    }
-
-    required init?(coder: NSCoder) { fatalError() }
-
-    func filter(query: String) {
-        var visibleY = CGFloat(0)
-        for row in rowViews.reversed() {
-            let visible = query.isEmpty || row.item.content.localizedCaseInsensitiveContains(query)
-            row.isHidden = !visible
-            if visible {
-                row.frame.origin.y = visibleY
-                visibleY += rowHeight
-            }
-        }
-        documentView.frame.size.height = max(visibleY, 1)
-        // Always clamp against maxHeight (the original height) so clearing the
-        // search fully restores the list — frame.height shrinks when filtering,
-        // so using it here would permanently cap the restored size.
-        let frameH = min(visibleY, maxHeight)
-        frame.size.height = frameH
-        scrollView.frame  = bounds
-        scrollView.contentView.scroll(to: NSPoint(x: 0, y: max(0, visibleY - frameH)))
-    }
-
-    private func resolvedIcon(for item: ClipboardHistoryItem, settings: AppSettings,
-                              cache: inout [String: NSImage]) -> NSImage? {
-        if item.isLikelyPassword && settings.obfuscatePasswords {
-            return NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil)?
-                .withSymbolConfiguration(.init(pointSize: 11, weight: .regular))
-        }
-        guard let bid = item.sourceAppBundleID else { return nil }
-        if let cached = cache[bid] { return cached }
-        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bid) else { return nil }
-        let full  = NSWorkspace.shared.icon(forFile: url.path)
-        let small = NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
-            full.draw(in: rect, from: .zero, operation: .copy, fraction: 1)
-            return true
-        }
-        cache[bid] = small
-        return small
-    }
 }
 
 // MARK: - NSWindow convenience

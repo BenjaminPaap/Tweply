@@ -10,49 +10,62 @@ private func hotKeyEventCallback(
 ) -> OSStatus {
     guard let ptr = userData else { return OSStatus(eventNotHandledErr) }
     let mgr = Unmanaged<HotKeyManager>.fromOpaque(ptr).takeUnretainedValue()
-    DispatchQueue.main.async { mgr.onActivate?() }
+    var hkID = EventHotKeyID()
+    GetEventParameter(event, EventParamName(kEventParamDirectObject),
+                      EventParamType(typeEventHotKeyID), nil,
+                      MemoryLayout<EventHotKeyID>.size, nil, &hkID)
+    DispatchQueue.main.async {
+        if hkID.id == 2 { mgr.onActivateAndPaste?() }
+        else             { mgr.onActivate?() }
+    }
     return noErr
 }
 
-// Registers a global keyboard shortcut using Carbon's RegisterEventHotKey,
+// Registers global keyboard shortcuts using Carbon's RegisterEventHotKey,
 // which works inside the App Sandbox without Accessibility permission.
 final class HotKeyManager {
     static let shared = HotKeyManager()
     private init() {}
 
     var onActivate: (() -> Void)?
+    /// Fired by the paste hotkey (Cmd+Shift+V). Copy to clipboard then simulate paste.
+    var onActivateAndPaste: (() -> Void)?
 
     private var hotKeyRef: EventHotKeyRef?
+    private var pasteHotKeyRef: EventHotKeyRef?
     private var eventHandlerRef: EventHandlerRef?
 
     func apply(settings: AppSettings) {
         unregister()
-        guard settings.hotkeyEnabled else { return }
-        register(keyCode: UInt32(settings.hotkeyKeyCode),
-                 modifiers: UInt32(settings.hotkeyModifiers))
+        installEventHandler()
+        if settings.hotkeyEnabled {
+            let hkID = EventHotKeyID(signature: fourCharCode("TWPL"), id: 1)
+            RegisterEventHotKey(UInt32(settings.hotkeyKeyCode),
+                                UInt32(settings.hotkeyModifiers),
+                                hkID, GetApplicationEventTarget(), 0, &hotKeyRef)
+        }
+        // Cmd+Shift+V (keyCode 9, modifiers 768) is always registered as the paste hotkey.
+        let hkID2 = EventHotKeyID(signature: fourCharCode("TWPL"), id: 2)
+        RegisterEventHotKey(9, 768, hkID2, GetApplicationEventTarget(), 0, &pasteHotKeyRef)
     }
 
-    private func register(keyCode: UInt32, modifiers: UInt32) {
+    private func installEventHandler() {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind:  UInt32(kEventHotKeyPressed)
         )
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-        // InstallApplicationEventHandler is a C macro and not visible in Swift;
-        // it expands to InstallEventHandler(GetApplicationEventTarget(), ...).
         InstallEventHandler(
             GetApplicationEventTarget(),
             hotKeyEventCallback,
             1, &eventType, selfPtr, &eventHandlerRef
         )
-        var hkID = EventHotKeyID(signature: fourCharCode("TWPL"), id: 1)
-        RegisterEventHotKey(keyCode, modifiers, hkID,
-                            GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 
     func unregister() {
-        if let ref = hotKeyRef       { UnregisterEventHotKey(ref); hotKeyRef = nil }
-        if let ref = eventHandlerRef { RemoveEventHandler(ref);    eventHandlerRef = nil }
+        if let ref = hotKeyRef      { UnregisterEventHotKey(ref); hotKeyRef = nil }
+        if let ref = pasteHotKeyRef { UnregisterEventHotKey(ref); pasteHotKeyRef = nil }
+        if let ref = eventHandlerRef { RemoveEventHandler(ref);   eventHandlerRef = nil }
     }
 }
 
