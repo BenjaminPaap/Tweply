@@ -77,6 +77,8 @@ final class StatusBarController {
 
     // Paste mode: set to true when the paste hotkey fires; cleared after use or on menu close.
     private var pasteAfterCopy = false
+    // The app that was frontmost when the paste hotkey fired — paste target.
+    private var pasteTargetApp: NSRunningApplication?
 
     // References to clipboard NSMenuItems for search filtering.
     private var clipboardMenuItems: [NSMenuItem] = []
@@ -90,6 +92,7 @@ final class StatusBarController {
     }
 
     func openMenuAndPaste() {
+        pasteTargetApp = NSWorkspace.shared.frontmostApplication
         pasteAfterCopy = true
         openMenu()
     }
@@ -106,6 +109,7 @@ final class StatusBarController {
         delegate.onDidClose = { [weak self] in
             self?.isMenuOpen = false
             self?.pasteAfterCopy = false
+            self?.pasteTargetApp = nil
         }
         menuDelegate = delegate
         menu.delegate = delegate
@@ -316,7 +320,10 @@ final class StatusBarController {
     // MARK: - Paste Simulation
 
     private func simulatePaste() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        let target = pasteTargetApp
+        pasteTargetApp = nil
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             guard AXIsProcessTrusted() else {
                 let alert = NSAlert()
                 alert.messageText     = "Accessibility Access Required"
@@ -331,13 +338,25 @@ final class StatusBarController {
                 }
                 return
             }
-            let src = CGEventSource(stateID: .hidSystemState)
-            guard let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true),
-                  let keyUp   = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false) else { return }
-            keyDown.flags = .maskCommand
-            keyUp.flags   = .maskCommand
-            keyDown.post(tap: .cghidEventTap)
-            keyUp.post(tap: .cghidEventTap)
+
+            // Re-activate the app that was frontmost when the hotkey fired, then
+            // deliver Cmd+V directly to its PID so focus state doesn't matter.
+            target?.activate(options: .activateIgnoringOtherApps)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                let src = CGEventSource(stateID: .combinedSessionState)
+                guard let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true),
+                      let keyUp   = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false) else { return }
+                keyDown.flags = .maskCommand
+                keyUp.flags   = .maskCommand
+                if let pid = target?.processIdentifier {
+                    keyDown.postToPid(pid)
+                    keyUp.postToPid(pid)
+                } else {
+                    keyDown.post(tap: .cgAnnotatedSessionEventTap)
+                    keyUp.post(tap: .cgAnnotatedSessionEventTap)
+                }
+            }
         }
     }
 
