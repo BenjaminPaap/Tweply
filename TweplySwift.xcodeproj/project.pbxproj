@@ -29,6 +29,7 @@
 		D054000000000000000000AB /* ClipboardHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D034000000000000000000AB /* ClipboardHistoryItem.swift */; };
 		D055000000000000000000AB /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D035000000000000000000AB /* ClipboardManager.swift */; };
 		D060100000000000000000AB /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D060000100000000000000AB /* HotKeyManager.swift */; };
+		D056000000000000000000AB /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D036000000000000000000AB /* UpdateChecker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +56,7 @@
 		D033000000000000000000AB /* IconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconPickerView.swift; sourceTree = "<group>"; };
 		D034000000000000000000AB /* ClipboardHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryItem.swift; sourceTree = "<group>"; };
 		D035000000000000000000AB /* ClipboardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardManager.swift; sourceTree = "<group>"; };
+		D036000000000000000000AB /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 		D060000100000000000000AB /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -105,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				D023000000000000000000AB /* Template.swift */,
+				D036000000000000000000AB /* UpdateChecker.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -261,6 +264,7 @@
 				D053000000000000000000AB /* IconPickerView.swift in Sources */,
 				D054000000000000000000AB /* ClipboardHistoryItem.swift in Sources */,
 				D055000000000000000000AB /* ClipboardManager.swift in Sources */,
+				D056000000000000000000AB /* UpdateChecker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

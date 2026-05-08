@@ -185,7 +185,8 @@ struct ClipboardTab: View {
 // MARK: - General Tab
 
 struct GeneralTab: View {
-    @State private var settings: AppSettings = AppSettings()
+    @State  private var settings: AppSettings = AppSettings()
+    @ObservedObject private var checker = UpdateChecker.shared
 
     var body: some View {
         Form {
@@ -240,6 +241,59 @@ struct GeneralTab: View {
                             else       { try? SMAppService.mainApp.unregister() }
                         }
                     }
+            }
+
+            Section("Updates") {
+                Toggle("Check for updates automatically", isOn: $settings.checkForUpdatesEnabled)
+                    .onChange(of: settings.checkForUpdatesEnabled) { _, _ in
+                        DataStore.shared.saveSettings(settings)
+                    }
+
+                if settings.checkForUpdatesEnabled {
+                    Picker("Check interval", selection: $settings.updateCheckIntervalDays) {
+                        Text("Daily").tag(1)
+                        Text("Weekly").tag(7)
+                        Text("Monthly").tag(30)
+                    }
+                    .onChange(of: settings.updateCheckIntervalDays) { _, _ in
+                        DataStore.shared.saveSettings(settings)
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Button("Check for Updates") {
+                        Task { await UpdateChecker.shared.check() }
+                    }
+                    .disabled(checker.isChecking)
+
+                    if checker.isChecking {
+                        ProgressView().scaleEffect(0.7)
+                    }
+                }
+
+                if let latest = checker.latestVersion {
+                    if checker.updateAvailable {
+                        HStack {
+                            Label("Version \(latest) is available", systemImage: "arrow.down.circle.fill")
+                                .foregroundStyle(.green)
+                            Spacer()
+                            Button("Download") {
+                                NSWorkspace.shared.open(URL(string: "https://tweply.paap.one")!)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                        }
+                    } else {
+                        Label("Tweply is up to date (v\(latest)).", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let lastCheck = checker.lastCheckDate {
+                    Text("Last checked: \(lastCheck.formatted(.relative(presentation: .named)))")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
             }
         }
         .formStyle(.grouped)

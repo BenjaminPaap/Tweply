@@ -36,8 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.setup()
         statusBar = controller
 
-        // Register global hotkeys
+        // Check for updates if the interval has elapsed
         let settings = DataStore.shared.loadSettings()
+        UpdateChecker.shared.checkIfDue(settings: settings)
+
+        // Register global hotkeys
         HotKeyManager.shared.onActivate = { [weak controller] in
             controller?.openMenu()
         }

@@ -18,7 +18,8 @@ docker:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.paap.one
   script:
     - (cd dist && zip -r -y Tweply.zip Tweply.app)
-    - docker build --build-arg VERSION=$CI_COMMIT_SHA -t $IMAGE:$CI_COMMIT_SHA -t $IMAGE:latest .
+    - APP_VERSION=$(grep -m1 'MARKETING_VERSION = ' TweplySwift.xcodeproj/project.pbxproj | awk '{print $3}' | tr -d ';')
+    - docker build --build-arg VERSION=$CI_COMMIT_SHA --build-arg APP_VERSION=$APP_VERSION -t $IMAGE:$CI_COMMIT_SHA -t $IMAGE:latest .
     - docker push $IMAGE:$CI_COMMIT_SHA
     - docker push $IMAGE:latest
     - |

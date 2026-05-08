@@ -151,6 +151,20 @@ final class StatusBarController {
         menu.removeAllItems()
         clipboardMenuItems = []
 
+        // Show update badge at the very top when a newer version is available.
+        if UpdateChecker.shared.updateAvailable, let latest = UpdateChecker.shared.latestVersion {
+            let item = NSMenuItem(
+                title:         "Update available: v\(latest) — Download",
+                action:        #selector(openUpdatePage),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.image  = NSImage(systemSymbolName: "arrow.down.circle.fill",
+                                  accessibilityDescription: nil)
+            menu.addItem(item)
+            menu.addItem(.separator())
+        }
+
         let settings  = DataStore.shared.loadSettings()
         let templates = DataStore.shared.loadTemplates()
 
@@ -421,6 +435,10 @@ final class StatusBarController {
     }
 
     // MARK: - Settings
+
+    @objc private func openUpdatePage() {
+        NSWorkspace.shared.open(URL(string: "https://tweply.paap.one")!)
+    }
 
     @objc private func openSettings() {
         if let win = settingsWindow, win.isVisible {
