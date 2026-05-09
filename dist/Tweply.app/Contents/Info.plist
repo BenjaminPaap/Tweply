@@ -21,13 +21,13 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.2</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>5</string>
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
@@ -52,6 +52,10 @@
 	<true/>
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Tweply needs Accessibility access to paste text automatically into the active app after you select a snippet.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Tweply uses System Events to paste the selected snippet into the active app.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPasteboardUsageDescription</key>

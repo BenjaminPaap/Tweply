@@ -83,7 +83,21 @@ final class StatusBarController {
     // References to clipboard NSMenuItems for search filtering.
     private var clipboardMenuItems: [NSMenuItem] = []
 
+    @objc private func statusBarButtonClicked() {
+        guard let button = statusItem.button else { return }
+        // Non-paste open: clear any lingering paste state from a prior dismissed hotkey.
+        pasteAfterCopy = false
+        pasteTargetApp = nil
+        rebuildMenu()
+        menu.popUp(positioning: nil,
+                   at: NSPoint(x: 0, y: button.bounds.height + 4),
+                   in: button)
+    }
+
     func openMenu() {
+        // Non-paste open: clear any lingering paste state.
+        pasteAfterCopy = false
+        pasteTargetApp = nil
         rebuildMenu()
         let position = NSEvent.mouseLocation
         menu.popUp(positioning: nil,
@@ -94,7 +108,12 @@ final class StatusBarController {
     func openMenuAndPaste() {
         pasteTargetApp = NSWorkspace.shared.frontmostApplication
         pasteAfterCopy = true
-        openMenu()
+        // Rebuild and show — do NOT call openMenu() as it would clear pasteAfterCopy.
+        rebuildMenu()
+        let position = NSEvent.mouseLocation
+        menu.popUp(positioning: nil,
+                   at: NSPoint(x: position.x, y: position.y),
+                   in: nil)
     }
 
     func setup() {
@@ -104,16 +123,26 @@ final class StatusBarController {
             button.toolTip = "Tweply"
         }
 
+        // Route all menu opens through popUp() so the item action always fires
+        // before menuDidClose — setting statusItem.menu causes the delegate to
+        // fire menuDidClose BEFORE the action, which clears pasteAfterCopy too early.
+        if let button = statusItem.button {
+            button.target = self
+            button.action = #selector(statusBarButtonClicked)
+        }
+
         let delegate = StatusBarMenuDelegate()
-        delegate.onWillOpen = { [weak self] in self?.menuWillOpenHandler() }
+        delegate.onWillOpen = { [weak self] in self?.isMenuOpen = true }
         delegate.onDidClose = { [weak self] in
             self?.isMenuOpen = false
-            self?.pasteAfterCopy = false
-            self?.pasteTargetApp = nil
+            // pasteAfterCopy/pasteTargetApp are NOT cleared here: menuDidClose fires
+            // before the item action, so clearing here would wipe the paste state
+            // before activateClipboardItem/activateItem can read it.
+            // They are cleared in the action handlers and at the start of every
+            // non-paste menu open (statusBarButtonClicked, openMenu).
         }
         menuDelegate = delegate
         menu.delegate = delegate
-        statusItem.menu = menu
 
         rebuildMenu()
 
@@ -138,11 +167,6 @@ final class StatusBarController {
                 self.rebuildMenu()
             }
         }
-    }
-
-    private func menuWillOpenHandler() {
-        isMenuOpen = true
-        rebuildMenu()
     }
 
     // MARK: - Menu Building
@@ -333,43 +357,31 @@ final class StatusBarController {
 
     // MARK: - Paste Simulation
 
-    private func simulatePaste() {
-        let target = pasteTargetApp
-        pasteTargetApp = nil
+    private func simulatePaste(to target: NSRunningApplication?, extraDelay: Double = 0) {
+        // AXIsProcessTrustedWithOptions with prompt:true is the only way to trigger
+        // the Accessibility permission dialog. CGEvent silently fails without it.
+        let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): kCFBooleanTrue!] as CFDictionary
+        guard AXIsProcessTrustedWithOptions(opts) else {
+            flashTooltip("Grant Accessibility access…")
+            return
+        }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            guard AXIsProcessTrusted() else {
-                let alert = NSAlert()
-                alert.messageText     = "Accessibility Access Required"
-                alert.informativeText = "To paste automatically, Tweply needs Accessibility access. Click Open Settings, enable Tweply under Accessibility, then try again."
-                alert.alertStyle      = .informational
-                alert.addButton(withTitle: "Open Settings")
-                alert.addButton(withTitle: "Later")
-                if alert.runModal() == .alertFirstButtonReturn {
-                    NSWorkspace.shared.open(
-                        URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-                    )
-                }
-                return
+        flashTooltip("Pasting…")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05 + extraDelay) {
+            if #available(macOS 14.0, *) {
+                target?.activate()
+            } else {
+                target?.activate(options: .activateIgnoringOtherApps)
             }
-
-            // Re-activate the app that was frontmost when the hotkey fired, then
-            // deliver Cmd+V directly to its PID so focus state doesn't matter.
-            target?.activate(options: .activateIgnoringOtherApps)
-
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 let src = CGEventSource(stateID: .combinedSessionState)
-                guard let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true),
-                      let keyUp   = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false) else { return }
-                keyDown.flags = .maskCommand
-                keyUp.flags   = .maskCommand
-                if let pid = target?.processIdentifier {
-                    keyDown.postToPid(pid)
-                    keyUp.postToPid(pid)
-                } else {
-                    keyDown.post(tap: .cgAnnotatedSessionEventTap)
-                    keyUp.post(tap: .cgAnnotatedSessionEventTap)
-                }
+                guard let down = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true),
+                      let up   = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false)
+                else { return }
+                down.flags = .maskCommand
+                up.flags   = .maskCommand
+                down.post(tap: .cgAnnotatedSessionEventTap)
+                up.post(tap: .cgAnnotatedSessionEventTap)
             }
         }
     }
@@ -389,31 +401,39 @@ final class StatusBarController {
 
     @objc private func activateClipboardItem(_ sender: NSMenuItem) {
         guard let item = sender.representedObject as? ClipboardHistoryItem else { return }
+        // Capture paste state synchronously while still inside the menu's run loop,
+        // before onDidClose can clear the properties.
+        let shouldPaste = pasteAfterCopy
+        let target = pasteTargetApp
+        pasteAfterCopy = false
+        pasteTargetApp = nil
         ClipboardManager.shared.copyItem(item)
         flashTooltip("Copied!")
-        if pasteAfterCopy {
-            pasteAfterCopy = false
-            simulatePaste()
-        }
+        if shouldPaste { simulatePaste(to: target) }
     }
 
     @objc private func activateItem(_ sender: NSMenuItem) {
         guard let template = sender.representedObject as? Template else { return }
-        Task { @MainActor in await activate(template) }
+        // Capture paste state synchronously here — the async Task below runs after
+        // menu.popUp() returns and onDidClose fires, which would clear the properties.
+        let shouldPaste = pasteAfterCopy
+        let target = pasteTargetApp
+        pasteAfterCopy = false
+        pasteTargetApp = nil
+        Task { @MainActor in await activate(template, shouldPaste: shouldPaste, target: target) }
     }
 
-    private func activate(_ template: Template) async {
+    private func activate(_ template: Template, shouldPaste: Bool = false, target: NSRunningApplication? = nil) async {
         let segments = TemplateParser.parse(template.template)
         var userValues: [String] = []
+        var usedPicker = false
 
         if TemplateResolver.requiresInteraction(segments) {
             let descriptors = TemplateResolver.interactiveDescriptors(segments)
             guard let values = await presentChoicePicker(descriptors: descriptors) else { return }
             userValues = values
+            usedPicker = true
         }
-
-        let shouldPaste = pasteAfterCopy
-        pasteAfterCopy = false
 
         do {
             let result = try TemplateResolver.resolveAll(segments, userValues: userValues)
@@ -421,7 +441,7 @@ final class StatusBarController {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(result, forType: .string)
             flashTooltip("Copied!")
-            if shouldPaste { simulatePaste() }
+            if shouldPaste { simulatePaste(to: target, extraDelay: usedPicker ? 0.35 : 0) }
         } catch {
             flashTooltip("Error")
         }

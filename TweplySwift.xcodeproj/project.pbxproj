@@ -28,8 +28,8 @@
 		D053000000000000000000AB /* IconPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D033000000000000000000AB /* IconPickerView.swift */; };
 		D054000000000000000000AB /* ClipboardHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D034000000000000000000AB /* ClipboardHistoryItem.swift */; };
 		D055000000000000000000AB /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D035000000000000000000AB /* ClipboardManager.swift */; };
-		D060100000000000000000AB /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D060000100000000000000AB /* HotKeyManager.swift */; };
 		D056000000000000000000AB /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D036000000000000000000AB /* UpdateChecker.swift */; };
+		D060100000000000000000AB /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D060000100000000000000AB /* HotKeyManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -405,7 +405,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7YL8E9F9H4;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -416,7 +416,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = de.tweply.app;
 				PRODUCT_NAME = Tweply;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -434,7 +434,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7YL8E9F9H4;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -451,7 +451,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = de.tweply.app;
 				PRODUCT_NAME = Tweply;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;

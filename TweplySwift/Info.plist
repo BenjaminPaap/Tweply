@@ -32,6 +32,8 @@
 	<string>Tweply monitors the clipboard to build your clipboard history.</string>
 	<key>NSAccessibilityUsageDescription</key>
 	<string>Tweply needs Accessibility access to paste text automatically into the active app after you select a snippet.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Tweply uses System Events to paste the selected snippet into the active app.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
